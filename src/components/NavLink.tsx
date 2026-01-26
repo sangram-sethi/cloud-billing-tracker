@@ -8,25 +8,26 @@ type NavLinkProps = {
   children: React.ReactNode;
   className?: string;
   activeClassName?: string;
-  exact?: boolean; // if false, "/pricing/foo" also counts active for "/pricing"
+  exact?: boolean;
 };
 
 export default function NavLink({
   href,
   children,
   className = "",
-  activeClassName = "text-zinc-900",
+  activeClassName = "text-foreground",
   exact = false,
 }: NavLinkProps) {
   const pathname = usePathname();
-
-  const isActive = exact ? pathname === href : pathname === href || pathname.startsWith(href + "/");
+  const isActive = exact
+    ? pathname === href
+    : pathname === href || pathname.startsWith(href + "/");
 
   return (
     <Link
       href={href}
       className={[
-        "text-sm font-medium text-zinc-600 hover:text-zinc-900 transition-colors",
+        "text-sm font-medium text-muted-foreground hover:text-foreground transition-colors",
         className,
         isActive ? activeClassName : "",
       ].join(" ")}

@@ -12,6 +12,8 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+
 export const metadata: Metadata = {
   title: {
     default: "Cloud Budget Guard",
@@ -19,16 +21,16 @@ export const metadata: Metadata = {
   },
   description:
     "AWS-only anomaly alerts and weekly founder reports to prevent surprise cloud bills.",
-  metadataBase: new URL("http://localhost:3000"),
+  metadataBase: new URL(siteUrl),
 };
 
 export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en" className="h-full bg-background">
+    <html lang="en" className="h-full scroll-smooth">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} min-h-screen antialiased bg-background text-foreground`}
+        className={`${geistSans.variable} ${geistMono.variable} h-full bg-background text-foreground antialiased`}
       >
         {children}
       </body>
