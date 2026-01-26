@@ -60,3 +60,27 @@ a {
   text-decoration: none;
 }
 
+/* Premium hover glow (subtle, only when you choose to apply it) */
+.glow-card {
+  position: relative;
+}
+
+.glow-card::before {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 200ms var(--ease-snappy);
+  background: radial-gradient(
+      600px circle at var(--mx, 50%) var(--my, 20%),
+      rgba(99, 102, 241, 0.22),
+      transparent 55%
+    ),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.6), rgba(255, 255, 255, 0));
+}
+
+.glow-card:hover::before {
+  opacity: 1;
+}
