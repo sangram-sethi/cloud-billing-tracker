@@ -7,6 +7,7 @@ import {
   CardDescription,
 } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
+import { Badge } from "@/components/ui/Badge";
 
 const kpis = [
   { label: "This month spend", value: "$1,842", hint: "+12% vs last month" },
@@ -183,17 +184,9 @@ export default function AppDashboardPage() {
                         {a.when}
                       </p>
                     </div>
-
-                    <span
-                      className={[
-                        "rounded-full px-2.5 py-1 text-[11px] font-semibold border",
-                        a.severity === "High"
-                          ? "bg-danger/10 text-danger border-danger/20"
-                          : "bg-warning/10 text-warning border-warning/20",
-                      ].join(" ")}
-                    >
+                    <Badge variant={a.severity === "High" ? "danger" : "warning"}>
                       {a.severity}
-                    </span>
+                    </Badge>
                   </div>
 
                   <p className="mt-2 text-sm text-muted-foreground">
