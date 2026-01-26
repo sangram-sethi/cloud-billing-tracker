@@ -1,148 +1,155 @@
 import Link from "next/link";
-import Container from "@/components/Container";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/Card";
+import { Badge } from "@/components/ui/Badge";
+import { Check, Sparkles } from "lucide-react";
 
 const tiers = [
   {
     name: "Starter",
-    price: "₹999",
-    cadence: "/month",
-    blurb: "For early-stage teams who want alerts + weekly founder report.",
+    price: "₹0",
+    period: "month",
+    desc: "For solo founders testing spend visibility.",
+    badge: "Free",
     features: [
-      "AWS spend anomaly alerts",
+      "Dashboard (mock now, real later)",
       "Weekly founder report (email)",
+      "Basic anomaly alerts",
       "1 AWS account",
-      "Basic optimization tips",
     ],
-    cta: "Start Starter",
-    href: "/signup",
-    highlighted: false,
+    cta: { label: "Get started", href: "/signup" },
   },
   {
     name: "Pro",
-    price: "₹2,999",
-    cadence: "/month",
-    blurb: "For growing startups with multiple projects and stricter budgets.",
+    price: "₹999",
+    period: "month",
+    desc: "For startups that want reliable alerts and reporting.",
+    badge: "Most popular",
+    highlight: true,
     features: [
-      "Everything in Starter",
+      "Anomaly alerts with severity",
+      "Weekly founder report",
+      "AI optimization hints (phase 2)",
       "Up to 5 AWS accounts",
-      "Team budgets (by tags/cost centers — later)",
-      "Priority support",
+      "Priority email support",
     ],
-    cta: "Go Pro",
-    href: "/signup",
-    highlighted: true,
+    cta: { label: "Start Pro", href: "/signup" },
   },
   {
     name: "Enterprise",
     price: "Custom",
-    cadence: "",
-    blurb: "For enterprises needing SSO, audit trails, and custom workflows.",
+    period: "",
+    desc: "For teams needing SSO, audit logs, and approvals.",
+    badge: "Talk to us",
     features: [
-      "Unlimited AWS accounts",
       "SSO / SAML (later)",
       "Audit logs (later)",
-      "Custom reports + SLAs",
+      "Custom policies + approvals (later)",
+      "Multi-org support (later)",
+      "Dedicated support",
     ],
-    cta: "Contact us",
-    href: "/contact",
-    highlighted: false,
+    cta: { label: "Contact", href: "/security" },
   },
 ];
 
 export default function PricingPage() {
   return (
-    <div>
-      <section className="border-b border-zinc-200 bg-white">
-        <Container className="py-14 sm:py-16">
-          <div className="max-w-2xl">
-            <h1 className="text-3xl font-semibold tracking-tight text-zinc-900 sm:text-4xl">
-              Simple pricing that scales with your AWS usage
-            </h1>
-            <p className="mt-3 text-sm leading-relaxed text-zinc-600 sm:text-base">
-              Start small with anomaly alerts + a weekly founder report. Upgrade when you add more
-              accounts and teams.
-            </p>
-          </div>
-        </Container>
+    <div className="space-y-10">
+      <section className="space-y-3">
+        <div className="flex items-center gap-2">
+          <Sparkles className="h-4 w-4 text-muted-foreground" />
+          <Badge variant="neutral">Pricing (MVP)</Badge>
+        </div>
+        <h1 className="text-4xl font-semibold tracking-tight text-foreground sm:text-5xl">
+          Simple pricing that scales with you.
+        </h1>
+        <p className="max-w-2xl text-base leading-relaxed text-muted-foreground">
+          Start free. Upgrade when alerts and reporting become mission-critical. (Billing and limits will
+          be enforced once backend is live.)
+        </p>
+
+        {/* Toggle placeholder */}
+        <div className="mt-5 inline-flex items-center gap-2 rounded-xl border border-border bg-surface px-3 py-2 text-sm">
+          <span className="font-semibold text-foreground">Monthly</span>
+          <span className="text-muted-foreground">/</span>
+          <span className="text-muted-foreground">Annual (coming soon)</span>
+        </div>
       </section>
 
-      <section className="bg-zinc-50/60">
-        <Container className="py-12">
-          <div className="grid gap-4 lg:grid-cols-3">
-            {tiers.map((t) => (
-              <div
-                key={t.name}
-                className={[
-                  "rounded-2xl border bg-white p-6 shadow-sm",
-                  t.highlighted ? "border-zinc-900" : "border-zinc-200",
-                ].join(" ")}
-              >
-                <div className="flex items-start justify-between gap-4">
-                  <div>
-                    <h2 className="text-sm font-semibold text-zinc-900">{t.name}</h2>
-                    <p className="mt-1 text-sm text-zinc-600">{t.blurb}</p>
-                  </div>
-                  {t.highlighted ? (
-                    <span className="rounded-full bg-zinc-900 px-3 py-1 text-xs font-semibold text-white">
-                      Most popular
-                    </span>
+      <section className="grid gap-4 lg:grid-cols-3">
+        {tiers.map((t) => (
+          <Card key={t.name} glow={!!t.highlight} className={t.highlight ? "border-primary/30" : ""}>
+            <CardHeader>
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <CardTitle>{t.name}</CardTitle>
+                  <CardDescription>{t.desc}</CardDescription>
+                </div>
+                <Badge variant={t.highlight ? "default" : "neutral"}>{t.badge}</Badge>
+              </div>
+
+              <div className="mt-4">
+                <div className="flex items-end gap-2">
+                  <p className="text-3xl font-semibold tracking-tight text-foreground">{t.price}</p>
+                  {t.period ? (
+                    <p className="pb-1 text-sm text-muted-foreground">/{t.period}</p>
                   ) : null}
                 </div>
+              </div>
+            </CardHeader>
 
-                <div className="mt-6 flex items-end gap-2">
-                  <div className="text-3xl font-semibold tracking-tight text-zinc-900">
-                    {t.price}
-                  </div>
-                  <div className="pb-1 text-sm text-zinc-600">{t.cadence}</div>
-                </div>
+            <CardContent>
+              <ul className="space-y-2 text-sm text-muted-foreground">
+                {t.features.map((f) => (
+                  <li key={f} className="flex items-start gap-2">
+                    <Check className="mt-0.5 h-4 w-4" />
+                    <span>{f}</span>
+                  </li>
+                ))}
+              </ul>
 
-                <ul className="mt-6 space-y-3 text-sm text-zinc-700">
-                  {t.features.map((f) => (
-                    <li key={f} className="flex gap-2">
-                      <span className="mt-1.5 h-1.5 w-1.5 rounded-full bg-zinc-900" />
-                      <span>{f}</span>
-                    </li>
-                  ))}
-                </ul>
-
+              <div className="mt-6">
                 <Link
-                  href={t.href}
+                  href={t.cta.href}
                   className={[
-                    "mt-8 inline-flex w-full items-center justify-center rounded-lg px-4 py-2.5 text-sm font-semibold transition-colors",
-                    t.highlighted
-                      ? "bg-zinc-900 text-white hover:bg-zinc-800"
-                      : "border border-zinc-200 text-zinc-900 hover:bg-zinc-50",
+                    "inline-flex w-full items-center justify-center rounded-xl px-4 py-2 text-sm font-semibold transition",
+                    t.highlight
+                      ? "bg-foreground text-background hover:opacity-90"
+                      : "border border-border bg-surface text-foreground hover:bg-surface-2",
                   ].join(" ")}
                 >
-                  {t.cta}
+                  {t.cta.label}
                 </Link>
 
-                <p className="mt-3 text-xs text-zinc-500">
-                  * WhatsApp alerts, multi-cloud (GCP/Azure), and SSO are planned for later phases.
+                <p className="mt-3 text-xs text-muted-foreground">
+                  {t.name === "Enterprise"
+                    ? "Enterprise features ship after MVP stabilization."
+                    : "Cancel anytime. Upgrade/downgrade will be instant once backend is ready."}
                 </p>
               </div>
-            ))}
-          </div>
+            </CardContent>
+          </Card>
+        ))}
+      </section>
 
-          <div className="mt-10 rounded-2xl border border-zinc-200 bg-white p-6">
-            <h3 className="text-sm font-semibold text-zinc-900">FAQ (quick)</h3>
-            <div className="mt-4 grid gap-6 sm:grid-cols-2">
-              <div>
-                <p className="text-sm font-medium text-zinc-900">Do you need AWS access?</p>
-                <p className="mt-1 text-sm text-zinc-600">
-                  Not for the UI demo. You can explore with mocked data first, then connect AWS via
-                  a secure IAM role when ready.
-                </p>
-              </div>
-              <div>
-                <p className="text-sm font-medium text-zinc-900">Can I cancel anytime?</p>
-                <p className="mt-1 text-sm text-zinc-600">
-                  Yes. Billing and subscriptions will be added after the MVP UX is finalized.
-                </p>
-              </div>
-            </div>
-          </div>
-        </Container>
+      <section className="rounded-2xl border border-border bg-surface p-8 shadow-sm">
+        <h2 className="text-xl font-semibold tracking-tight text-foreground">What’s included in MVP</h2>
+        <p className="mt-2 text-sm text-muted-foreground">
+          AWS-only anomaly alerts + weekly founder report, with a premium UI and security-first AWS connection flow.
+        </p>
+        <div className="mt-4 flex flex-col gap-3 sm:flex-row">
+          <Link
+            href="/signup"
+            className="inline-flex items-center justify-center rounded-xl bg-foreground px-4 py-2 text-sm font-semibold text-background hover:opacity-90 transition"
+          >
+            Start free
+          </Link>
+          <Link
+            href="/security"
+            className="inline-flex items-center justify-center rounded-xl border border-border bg-surface px-4 py-2 text-sm font-semibold text-foreground hover:bg-surface-2 transition"
+          >
+            Security model
+          </Link>
+        </div>
       </section>
     </div>
   );
