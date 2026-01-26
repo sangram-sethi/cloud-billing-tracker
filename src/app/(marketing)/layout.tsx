@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
+import { LinkButton } from "@/components/ui/LinkButton";
 
 function NavLink({
   href,
@@ -63,12 +64,12 @@ export default function MarketingLayout({ children }: { children: ReactNode }) {
           </nav>
 
           <div className="flex items-center gap-2">
-            <ActionLink href="/login" variant="secondary">
+            <LinkButton href="/login" variant="secondary" size="sm">
               Sign in
-            </ActionLink>
-            <ActionLink href="/signup" variant="primary">
+            </LinkButton>
+            <LinkButton href="/signup" variant="primary" size="sm">
               Get started
-            </ActionLink>
+            </LinkButton>
           </div>
         </div>
       </header>
