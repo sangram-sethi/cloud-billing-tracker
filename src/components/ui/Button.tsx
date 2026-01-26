@@ -13,26 +13,28 @@ type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
 };
 
 const base =
-  "inline-flex items-center justify-center gap-2 font-semibold select-none cursor-pointer " +
-  "transition-[scale,translate,opacity,background-color,border-color,color,box-shadow] duration-200 ease-[var(--ease-snappy)] " +
-  "hover:-translate-y-[0.5px] active:translate-y-0 active:scale-[0.98] " +
+  "inline-flex items-center justify-center gap-2 whitespace-nowrap select-none cursor-pointer " +
+  "rounded-full text-sm font-medium tracking-tight " +
+  "transition-[transform,opacity,background-color,border-color,color,box-shadow] duration-200 ease-[var(--ease-snappy)] " +
+  "hover:-translate-y-[0.5px] active:translate-y-0 active:scale-[0.99] " +
+  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25 focus-visible:ring-offset-0 " +
   "disabled:opacity-60 disabled:cursor-not-allowed";
 
 const variants: Record<Variant, string> = {
   primary:
-    "bg-foreground text-background hover:opacity-90 border border-transparent hover:shadow-sm",
+    "bg-foreground text-background border border-transparent hover:opacity-90 shadow-[0_18px_60px_-40px_rgba(255,255,255,0.35)]",
   secondary:
-    "bg-surface text-foreground border border-border hover:bg-muted hover:shadow-sm",
+    "border border-border/70 bg-surface/40 text-foreground backdrop-blur hover:bg-surface/60",
   ghost:
-    "bg-transparent text-foreground hover:bg-surface-2 border border-transparent",
+    "bg-transparent text-foreground border border-transparent hover:bg-surface/50",
   danger:
-    "bg-danger text-primary-foreground hover:opacity-90 border border-transparent hover:shadow-sm",
+    "bg-danger text-white border border-transparent hover:opacity-90",
 };
 
 const sizes: Record<Size, string> = {
-  sm: "h-9 px-3 rounded-lg text-sm",
-  md: "h-10 px-4 rounded-xl text-sm",
-  lg: "h-11 px-5 rounded-xl text-sm",
+  sm: "h-9 px-4",
+  md: "h-10 px-5",
+  lg: "h-12 px-7",
 };
 
 export function Button({

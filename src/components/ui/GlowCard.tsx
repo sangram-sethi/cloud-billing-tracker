@@ -5,10 +5,6 @@ import { Card } from "@/components/ui/Card";
 
 type Props = React.ComponentProps<typeof Card>;
 
-/**
- * Cursor-following glow wrapper.
- * Uses CSS vars --mx/--my consumed by .glow-card::before in globals.css
- */
 export function GlowCard({ className, ...props }: Props) {
   const ref = React.useRef<HTMLDivElement | null>(null);
 
@@ -25,12 +21,12 @@ export function GlowCard({ className, ...props }: Props) {
   }
 
   return (
-    <div
+    <Card
       ref={ref}
+      glow
       onMouseMove={onMove}
-      className={className ? `glow-card ${className}` : "glow-card"}
-    >
-      <Card glow {...props} />
-    </div>
+      className={className}
+      {...props}
+    />
   );
 }
