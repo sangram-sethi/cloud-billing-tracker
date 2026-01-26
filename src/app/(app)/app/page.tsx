@@ -9,12 +9,13 @@ import {
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 import { GlowCard } from "@/components/ui/GlowCard";
+import { Plug, FileText, DollarSign, TrendingUp, AlertTriangle, Link2 } from "lucide-react";
 
 const kpis = [
-  { label: "This month spend", value: "$1,842", hint: "+12% vs last month" },
-  { label: "Forecast (EOM)", value: "$2,410", hint: "based on last 14 days" },
-  { label: "Active alerts", value: "3", hint: "2 high, 1 medium" },
-  { label: "Connected accounts", value: "0", hint: "connect AWS to go live" },
+  { label: "This month spend", value: "$1,842", hint: "+12% vs last month", icon: DollarSign },
+  { label: "Forecast (EOM)", value: "$2,410", hint: "based on last 14 days", icon: TrendingUp },
+  { label: "Active alerts", value: "3", hint: "2 high, 1 medium", icon: AlertTriangle },
+  { label: "Connected accounts", value: "0", hint: "connect AWS to go live", icon: Link2 },
 ];
 
 const topServices = [
@@ -72,13 +73,17 @@ export default function AppDashboardPage() {
         <div className="flex items-center gap-3">
           <Link
             href="/app/connect-aws"
-            className="rounded-lg bg-foreground px-3 py-2 text-sm font-semibold text-background hover:opacity-90 transition"
+            className="inline-flex items-center gap-2 rounded-lg bg-foreground px-3 py-2 text-sm font-semibold text-background hover:opacity-90 transition"
           >
+            <Plug className="h-4 w-4" />
             Connect AWS
           </Link>
+
           <Button type="button" variant="secondary" size="md">
+            <FileText className="h-4 w-4" />
             Generate report
           </Button>
+
         </div>
       </div>
 
@@ -87,9 +92,10 @@ export default function AppDashboardPage() {
         {kpis.map((k) => (
           <GlowCard key={k.label}>
             <CardContent className="pt-6">
-              <p className="text-xs font-medium text-muted-foreground">
-                {k.label}
-              </p>
+              <div className="flex items-center gap-2">
+                <k.icon className="h-4 w-4 text-muted-foreground" />
+                <p className="text-xs font-medium text-muted-foreground">{k.label}</p>
+              </div>
               <p className="mt-2 text-2xl font-semibold tracking-tight text-foreground">
                 {k.value}
               </p>
