@@ -12,7 +12,8 @@ export function Card({ className, glow = false, ...props }: CardProps) {
   return (
     <div
       className={cn(
-        "rounded-2xlorder bg-surface shadow-sm",
+        // Base surface card (premium dark UI)
+        "rounded-2xl border border-border bg-surface shadow-sm",
         "transition-[transform,box-shadow] duration-200 ease-(--ease-snappy)",
         "hover:-translate-y-px hover:shadow-md",
         glow && "glow-card",
