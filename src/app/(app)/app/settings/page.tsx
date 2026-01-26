@@ -1,37 +1,63 @@
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/Card";
+import { Badge } from "@/components/ui/Badge";
+
+const blocks = [
+  {
+    title: "Budgets",
+    desc: "Set monthly thresholds and burn-rate alerts.",
+    tag: "Coming soon",
+  },
+  {
+    title: "Notifications",
+    desc: "Email now, WhatsApp later. Configure severity rules.",
+    tag: "Coming soon",
+  },
+  {
+    title: "Team access",
+    desc: "Invite team members and control permissions.",
+    tag: "Coming soon",
+  },
+  {
+    title: "Integrations",
+    desc: "Add AWS accounts, later GCP/Azure.",
+    tag: "Coming soon",
+  },
+];
+
 export default function SettingsPage() {
   return (
-    <div className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm">
-      <h1 className="text-2xl font-semibold tracking-tight">Settings</h1>
-      <p className="mt-2 text-sm text-zinc-600">
-        Week 1 placeholder. Billing limits, notification channels, and org settings come next.
-      </p>
+    <div className="space-y-4">
+      <div>
+        <h1 className="text-2xl font-semibold tracking-tight text-foreground">Settings</h1>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Week 1 placeholder. These settings get wired in Week 2+.
+        </p>
+      </div>
 
-      <div className="mt-6 grid gap-4 sm:grid-cols-2">
-        <div className="rounded-xl border border-zinc-200 bg-zinc-50 p-4">
-          <p className="text-sm font-semibold text-zinc-900">Budgets (coming soon)</p>
-          <p className="mt-1 text-sm text-zinc-600">
-            Set monthly budget thresholds and burn-rate alerts.
-          </p>
-        </div>
-        <div className="rounded-xl border border-zinc-200 bg-zinc-50 p-4">
-          <p className="text-sm font-semibold text-zinc-900">Notifications (coming soon)</p>
-          <p className="mt-1 text-sm text-zinc-600">
-            Email now, WhatsApp later. Configure severity rules.
-          </p>
-        </div>
-        <div className="rounded-xl border border-zinc-200 bg-zinc-50 p-4">
-          <p className="text-sm font-semibold text-zinc-900">Team access (coming soon)</p>
-          <p className="mt-1 text-sm text-zinc-600">
-            Invite team members and control permissions.
-          </p>
-        </div>
-        <div className="rounded-xl border border-zinc-200 bg-zinc-50 p-4">
-          <p className="text-sm font-semibold text-zinc-900">Integrations (coming soon)</p>
-          <p className="mt-1 text-sm text-zinc-600">
-            Add AWS accounts, later GCP/Azure.
-          </p>
-        </div>
+      <div className="grid gap-4 sm:grid-cols-2">
+        {blocks.map((b) => (
+          <Card key={b.title}>
+            <CardHeader>
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <CardTitle>{b.title}</CardTitle>
+                  <CardDescription>{b.desc}</CardDescription>
+                </div>
+                <Badge variant="neutral">{b.tag}</Badge>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="rounded-xl border border-border bg-surface-2 p-4">
+                <p className="text-sm font-semibold text-foreground">Planned UX</p>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  This section will have an editable form + save confirmation toast.
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
       </div>
     </div>
   );
 }
+
