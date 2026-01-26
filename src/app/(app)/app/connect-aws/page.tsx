@@ -2,16 +2,17 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/Card";
+import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Label } from "@/components/ui/Label";
+import { Badge } from "@/components/ui/Badge";
 
 function isRoleArn(value: string) {
-  // lightweight check (MVP): arn:aws:iam::<12 digits>:role/<name>
   return /^arn:aws:iam::\d{12}:role\/.+$/.test(value.trim());
 }
 
 function isExternalId(value: string) {
-  // keep it simple: 8–128 chars, no spaces (you can relax later)
   const v = value.trim();
   return v.length >= 8 && v.length <= 128 && !/\s/.test(v);
 }
@@ -33,7 +34,6 @@ export default function ConnectAwsPage() {
     setSaved(false);
     setSaving(true);
 
-    // Mock save: Week 1 only UI
     await new Promise((r) => setTimeout(r, 700));
 
     setSaving(false);
@@ -45,196 +45,198 @@ export default function ConnectAwsPage() {
       {/* Header */}
       <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Connect AWS</h1>
-          <p className="mt-1 text-sm text-zinc-600">
+          <h1 className="text-2xl font-semibold tracking-tight text-foreground">Connect AWS</h1>
+          <p className="mt-1 text-sm text-muted-foreground">
             Add an IAM Role ARN and External ID. We use least-privilege and start read-only (billing).
           </p>
         </div>
 
         <Link
           href="/security"
-          className="text-sm font-semibold text-zinc-700 hover:text-zinc-900"
+          className="text-sm font-semibold text-muted-foreground hover:text-foreground transition"
         >
           View security details →
         </Link>
       </div>
 
-      {/* Steps */}
       <div className="grid gap-4 lg:grid-cols-3">
-        {/* Left: Instructions */}
-        <div className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm">
-          <h2 className="text-sm font-semibold text-zinc-900">Setup checklist (Week 2)</h2>
-          <ol className="mt-3 space-y-3 text-sm text-zinc-700">
-            <li className="flex gap-3">
-              <span className="mt-0.5 inline-flex h-6 w-6 items-center justify-center rounded-full bg-zinc-900 text-xs font-semibold text-white">
-                1
-              </span>
+        {/* Setup checklist */}
+        <Card>
+          <CardHeader>
+            <div className="flex items-center justify-between">
               <div>
-                <p className="font-medium text-zinc-900">Create IAM role</p>
-                <p className="mt-1 text-zinc-600">
-                  We’ll provide CloudFormation + policy template. For now, use placeholders.
-                </p>
+                <CardTitle>Setup checklist</CardTitle>
+                <CardDescription>Templates arrive in Week 2</CardDescription>
               </div>
-            </li>
-            <li className="flex gap-3">
-              <span className="mt-0.5 inline-flex h-6 w-6 items-center justify-center rounded-full bg-zinc-900 text-xs font-semibold text-white">
-                2
-              </span>
-              <div>
-                <p className="font-medium text-zinc-900">Set External ID</p>
-                <p className="mt-1 text-zinc-600">
-                  Prevents confused-deputy issues. Keep it secret.
-                </p>
-              </div>
-            </li>
-            <li className="flex gap-3">
-              <span className="mt-0.5 inline-flex h-6 w-6 items-center justify-center rounded-full bg-zinc-900 text-xs font-semibold text-white">
-                3
-              </span>
-              <div>
-                <p className="font-medium text-zinc-900">Paste details here</p>
-                <p className="mt-1 text-zinc-600">
-                  We’ll validate + test connection once backend is wired.
-                </p>
-              </div>
-            </li>
-          </ol>
-
-          <div className="mt-5 rounded-xl border border-zinc-200 bg-zinc-50 p-4">
-            <p className="text-xs font-semibold text-zinc-900">Permissions scope</p>
-            <p className="mt-1 text-sm text-zinc-700">
-              Billing & cost metadata only (read-only). No access keys required.
-            </p>
-          </div>
-        </div>
-
-        {/* Right: Form */}
-        <div className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm lg:col-span-2">
-          <h2 className="text-sm font-semibold text-zinc-900">Connection details</h2>
-          <p className="mt-1 text-sm text-zinc-600">
-            This is UI-only in Week 1. We’ll store securely and verify in Week 2.
-          </p>
-
-          <form onSubmit={onSubmit} className="mt-6 space-y-5">
-            <div>
-              <Label htmlFor="roleArn">IAM Role ARN</Label>
-              <Input
-                id="roleArn"
-                value={roleArn}
-                onChange={(e) => setRoleArn(e.target.value)}
-                placeholder="arn:aws:iam::123456789012:role/CloudBudgetGuardReadOnly"
-                state={roleArn.length === 0 ? "default" : roleArnOk ? "success" : "error"}
-              />
-              {roleArn.length > 0 && !roleArnOk ? (
-                <p className="mt-2 text-xs text-red-600">
-                  Expected format: arn:aws:iam::123456789012:role/RoleName
-                </p>
-              ) : (
-                <p className="mt-2 text-xs text-zinc-500">
-                  Read-only role in your AWS account. No access keys.
-                </p>
-              )}
+              <Badge variant="neutral">MVP</Badge>
             </div>
+          </CardHeader>
 
-            <div>
-              <label className="text-sm font-medium text-zinc-900" htmlFor="externalId">
-                External ID
-              </label>
-              <input
-                id="externalId"
-                value={externalId}
-                onChange={(e) => setExternalId(e.target.value)}
-                placeholder="e.g. cbg_9f3a2c1d8k..."
-                className={[
-                  "mt-2 w-full rounded-xl border bg-white px-3 py-2.5 text-sm outline-none transition",
-                  externalId.length === 0
-                    ? "border-zinc-200 focus:border-zinc-400"
-                    : externalIdOk
-                    ? "border-emerald-300 focus:border-emerald-400"
-                    : "border-red-300 focus:border-red-400",
-                ].join(" ")}
-              />
-              {externalId.length > 0 && !externalIdOk ? (
-                <p className="mt-2 text-xs text-red-600">
-                  Use 8–128 chars, no spaces. Keep it secret.
-                </p>
-              ) : (
-                <p className="mt-2 text-xs text-zinc-500">
-                  Used to prevent confused-deputy attacks. We’ll generate this for you later.
-                </p>
-              )}
-            </div>
+          <CardContent>
+            <ol className="space-y-4 text-sm">
+              <li className="flex gap-3">
+                <span className="mt-0.5 inline-flex h-6 w-6 items-center justify-center rounded-full bg-foreground text-xs font-semibold text-background">
+                  1
+                </span>
+                <div>
+                  <p className="font-semibold text-foreground">Create IAM role</p>
+                  <p className="mt-1 text-muted-foreground">
+                    We’ll provide CloudFormation + least-privilege policy.
+                  </p>
+                </div>
+              </li>
 
-            <div>
-              <label className="text-sm font-medium text-zinc-900" htmlFor="region">
-                Primary region (optional)
-              </label>
-              <select
-                id="region"
-                value={region}
-                onChange={(e) => setRegion(e.target.value)}
-                className="mt-2 w-full rounded-xl border border-zinc-200 bg-white px-3 py-2.5 text-sm outline-none focus:border-zinc-400"
-              >
-                <option value="ap-south-1">ap-south-1 (Mumbai)</option>
-                <option value="us-east-1">us-east-1 (N. Virginia)</option>
-                <option value="us-west-2">us-west-2 (Oregon)</option>
-                <option value="eu-west-1">eu-west-1 (Ireland)</option>
-                <option value="ap-southeast-1">ap-southeast-1 (Singapore)</option>
-              </select>
-              <p className="mt-2 text-xs text-zinc-500">
-                This helps default filters and reporting (mocked for now).
+              <li className="flex gap-3">
+                <span className="mt-0.5 inline-flex h-6 w-6 items-center justify-center rounded-full bg-foreground text-xs font-semibold text-background">
+                  2
+                </span>
+                <div>
+                  <p className="font-semibold text-foreground">Set External ID</p>
+                  <p className="mt-1 text-muted-foreground">
+                    Prevents confused-deputy issues. Keep it secret.
+                  </p>
+                </div>
+              </li>
+
+              <li className="flex gap-3">
+                <span className="mt-0.5 inline-flex h-6 w-6 items-center justify-center rounded-full bg-foreground text-xs font-semibold text-background">
+                  3
+                </span>
+                <div>
+                  <p className="font-semibold text-foreground">Paste details here</p>
+                  <p className="mt-1 text-muted-foreground">
+                    We’ll validate + test connection once backend is wired.
+                  </p>
+                </div>
+              </li>
+            </ol>
+
+            <div className="mt-5 rounded-xl border border-border bg-surface-2 p-4">
+              <p className="text-xs font-semibold text-foreground">Permissions scope</p>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Billing & cost metadata only (read-only). No access keys required.
               </p>
             </div>
+          </CardContent>
+        </Card>
 
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-              <button
-                type="submit"
-                disabled={!canSubmit}
-                className={[
-                  "inline-flex items-center justify-center rounded-xl px-4 py-2.5 text-sm font-semibold transition-colors",
-                  canSubmit
-                    ? "bg-zinc-900 text-white hover:bg-zinc-800"
-                    : "bg-zinc-200 text-zinc-500 cursor-not-allowed",
-                ].join(" ")}
-              >
-                {saving ? "Saving..." : "Save connection"}
-              </button>
-
-              {saved ? (
-                <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm font-medium text-emerald-700">
-                  Saved (mock). Backend validation comes in Week 2.
-                </div>
-              ) : (
-                <div className="text-xs text-zinc-500">
-                  Tip: We’ll provide a copy-paste CloudFormation template later.
-                </div>
-              )}
+        {/* Form */}
+        <Card className="lg:col-span-2">
+          <CardHeader>
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+              <div>
+                <CardTitle>Connection details</CardTitle>
+                <CardDescription>
+                  Week 1 UI only. We’ll store securely and verify in Week 2.
+                </CardDescription>
+              </div>
+              {saved ? <Badge variant="success">Saved</Badge> : <Badge variant="default">Not connected</Badge>}
             </div>
-          </form>
+          </CardHeader>
 
-          {/* Preview card */}
-          <div className="mt-6 rounded-2xl border border-zinc-200 bg-zinc-50 p-5">
-            <p className="text-xs font-semibold text-zinc-900">Connection preview (mock)</p>
-            <div className="mt-3 grid gap-2 text-sm text-zinc-700 sm:grid-cols-2">
-              <div className="rounded-xl border border-zinc-200 bg-white p-3">
-                <p className="text-xs text-zinc-500">Role ARN</p>
-                <p className="mt-1 break-all font-medium text-zinc-900">
-                  {roleArn || "—"}
+          <CardContent>
+            <form onSubmit={onSubmit} className="space-y-5">
+              <div className="space-y-2">
+                <Label htmlFor="roleArn">IAM Role ARN</Label>
+                <Input
+                  id="roleArn"
+                  value={roleArn}
+                  onChange={(e) => setRoleArn(e.target.value)}
+                  placeholder="arn:aws:iam::123456789012:role/CloudBudgetGuardReadOnly"
+                  state={roleArn.length === 0 ? "default" : roleArnOk ? "success" : "error"}
+                />
+                {roleArn.length > 0 && !roleArnOk ? (
+                  <p className="text-xs text-danger">
+                    Expected format: arn:aws:iam::123456789012:role/RoleName
+                  </p>
+                ) : (
+                  <p className="text-xs text-muted-foreground">
+                    Read-only role in your AWS account. No access keys.
+                  </p>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="externalId">External ID</Label>
+                <Input
+                  id="externalId"
+                  value={externalId}
+                  onChange={(e) => setExternalId(e.target.value)}
+                  placeholder="e.g. cbg_9f3a2c1d8k..."
+                  state={externalId.length === 0 ? "default" : externalIdOk ? "success" : "error"}
+                />
+                {externalId.length > 0 && !externalIdOk ? (
+                  <p className="text-xs text-danger">Use 8–128 chars, no spaces. Keep it secret.</p>
+                ) : (
+                  <p className="text-xs text-muted-foreground">
+                    Used to prevent confused-deputy attacks. We’ll generate this for you later.
+                  </p>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="region">Primary region (optional)</Label>
+                <select
+                  id="region"
+                  value={region}
+                  onChange={(e) => setRegion(e.target.value)}
+                  className="h-10 w-full rounded-xl border border-border bg-surface px-3 text-sm text-foreground outline-none transition-[box-shadow,border-color] duration-200 ease-(--ease-snappy) focus-visible:ring-2 focus-visible:ring-primary/20"
+                >
+                  <option value="ap-south-1">ap-south-1 (Mumbai)</option>
+                  <option value="us-east-1">us-east-1 (N. Virginia)</option>
+                  <option value="us-west-2">us-west-2 (Oregon)</option>
+                  <option value="eu-west-1">eu-west-1 (Ireland)</option>
+                  <option value="ap-southeast-1">ap-southeast-1 (Singapore)</option>
+                </select>
+                <p className="text-xs text-muted-foreground">
+                  Helps default filters and reporting (mocked for now).
                 </p>
               </div>
-              <div className="rounded-xl border border-zinc-200 bg-white p-3">
-                <p className="text-xs text-zinc-500">External ID</p>
-                <p className="mt-1 break-all font-medium text-zinc-900">
-                  {externalId ? "••••••••••••••" : "—"}
-                </p>
+
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <Button type="submit" variant="primary" size="md" disabled={!canSubmit}>
+                  {saving ? "Saving..." : "Save connection"}
+                </Button>
+
+                {saved ? (
+                  <div className="rounded-xl border border-success/20 bg-success/10 px-3 py-2 text-sm font-medium text-success">
+                    Saved (mock). Backend validation comes in Week 2.
+                  </div>
+                ) : (
+                  <div className="text-xs text-muted-foreground">
+                    Tip: We’ll provide a copy-paste CloudFormation template later.
+                  </div>
+                )}
               </div>
-              <div className="rounded-xl border border-zinc-200 bg-white p-3 sm:col-span-2">
-                <p className="text-xs text-zinc-500">Region</p>
-                <p className="mt-1 font-medium text-zinc-900">{region}</p>
+            </form>
+
+            {/* Preview */}
+            <div className="mt-6 rounded-2xl border border-border bg-surface-2 p-5">
+              <p className="text-xs font-semibold text-foreground">Connection preview (mock)</p>
+
+              <div className="mt-3 grid gap-2 sm:grid-cols-2">
+                <div className="rounded-xl border border-border bg-surface p-3">
+                  <p className="text-xs text-muted-foreground">Role ARN</p>
+                  <p className="mt-1 break-all text-sm font-semibold text-foreground">
+                    {roleArn || "—"}
+                  </p>
+                </div>
+
+                <div className="rounded-xl border border-border bg-surface p-3">
+                  <p className="text-xs text-muted-foreground">External ID</p>
+                  <p className="mt-1 break-all text-sm font-semibold text-foreground">
+                    {externalId ? "••••••••••••••" : "—"}
+                  </p>
+                </div>
+
+                <div className="rounded-xl border border-border bg-surface p-3 sm:col-span-2">
+                  <p className="text-xs text-muted-foreground">Region</p>
+                  <p className="mt-1 text-sm font-semibold text-foreground">{region}</p>
+                </div>
               </div>
             </div>
-          </div>
-        </div>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );
