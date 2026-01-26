@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
+import { Input } from "@/components/ui/Input";
 
 function isRoleArn(value: string) {
   // lightweight check (MVP): arn:aws:iam::<12 digits>:role/<name>
@@ -118,19 +119,12 @@ export default function ConnectAwsPage() {
               <label className="text-sm font-medium text-zinc-900" htmlFor="roleArn">
                 IAM Role ARN
               </label>
-              <input
+              <Input
                 id="roleArn"
                 value={roleArn}
                 onChange={(e) => setRoleArn(e.target.value)}
                 placeholder="arn:aws:iam::123456789012:role/CloudBudgetGuardReadOnly"
-                className={[
-                  "mt-2 w-full rounded-xl border bg-white px-3 py-2.5 text-sm outline-none transition",
-                  roleArn.length === 0
-                    ? "border-zinc-200 focus:border-zinc-400"
-                    : roleArnOk
-                    ? "border-emerald-300 focus:border-emerald-400"
-                    : "border-red-300 focus:border-red-400",
-                ].join(" ")}
+                state={roleArn.length === 0 ? "default" : roleArnOk ? "success" : "error"}
               />
               {roleArn.length > 0 && !roleArnOk ? (
                 <p className="mt-2 text-xs text-red-600">
