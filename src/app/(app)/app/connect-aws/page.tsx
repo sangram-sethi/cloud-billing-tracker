@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { Input } from "@/components/ui/Input";
+import { Label } from "@/components/ui/Label";
 
 function isRoleArn(value: string) {
   // lightweight check (MVP): arn:aws:iam::<12 digits>:role/<name>
@@ -116,9 +117,7 @@ export default function ConnectAwsPage() {
 
           <form onSubmit={onSubmit} className="mt-6 space-y-5">
             <div>
-              <label className="text-sm font-medium text-zinc-900" htmlFor="roleArn">
-                IAM Role ARN
-              </label>
+              <Label htmlFor="roleArn">IAM Role ARN</Label>
               <Input
                 id="roleArn"
                 value={roleArn}
