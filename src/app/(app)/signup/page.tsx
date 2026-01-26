@@ -2,6 +2,11 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/Card";
+import { Button } from "@/components/ui/Button";
+import { Input } from "@/components/ui/Input";
+import { Label } from "@/components/ui/Label";
+import { Badge } from "@/components/ui/Badge";
 
 export default function SignupPage() {
   const [name, setName] = useState("");
@@ -12,10 +17,7 @@ export default function SignupPage() {
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
-
-    // Week 1: UI only (mock signup)
     await new Promise((r) => setTimeout(r, 700));
-
     setLoading(false);
     alert("Mock signup. Auth + onboarding wiring in Week 2.");
   }
@@ -25,90 +27,79 @@ export default function SignupPage() {
 
   return (
     <div className="mx-auto max-w-md">
-      <div className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm sm:p-8">
-        <h1 className="text-2xl font-semibold tracking-tight text-zinc-900">Create your account</h1>
-        <p className="mt-2 text-sm text-zinc-600">
-          Week 1 UI only. Real signup + org setup comes next.
-        </p>
+      <Card>
+        <CardHeader>
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <CardTitle>Create your account</CardTitle>
+              <CardDescription>Week 1 UI only. Real signup + org setup comes next.</CardDescription>
+            </div>
+            <Badge variant="neutral">MVP</Badge>
+          </div>
+        </CardHeader>
 
-        <form onSubmit={onSubmit} className="mt-6 space-y-4">
-          <div>
-            <label htmlFor="name" className="text-sm font-medium text-zinc-900">
-              Name
-            </label>
-            <input
-              id="name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="Your name"
-              className="mt-2 w-full rounded-xl border border-zinc-200 bg-white px-3 py-2.5 text-sm outline-none focus:border-zinc-400"
-              autoComplete="name"
-            />
+        <CardContent>
+          <form onSubmit={onSubmit} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="name">Name</Label>
+              <Input
+                id="name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="Your name"
+                autoComplete="name"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="email">Work email</Label>
+              <Input
+                id="email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="you@company.com"
+                autoComplete="email"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="password">Password</Label>
+              <Input
+                id="password"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Minimum 8 characters"
+                autoComplete="new-password"
+              />
+              <p className="text-xs text-muted-foreground">
+                Use at least 8 characters. Auth rules will be enforced in Week 2.
+              </p>
+            </div>
+
+            <Button type="submit" variant="primary" size="md" disabled={!canSubmit} className="w-full">
+              {loading ? "Creating..." : "Create account"}
+            </Button>
+          </form>
+
+          <div className="mt-5 text-sm text-muted-foreground">
+            Already have an account?{" "}
+            <Link href="/login" className="font-semibold text-foreground hover:underline">
+              Sign in
+            </Link>
           </div>
 
-          <div>
-            <label htmlFor="email" className="text-sm font-medium text-zinc-900">
-              Work email
-            </label>
-            <input
-              id="email"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="you@company.com"
-              className="mt-2 w-full rounded-xl border border-zinc-200 bg-white px-3 py-2.5 text-sm outline-none focus:border-zinc-400"
-              autoComplete="email"
-            />
+          <div className="mt-6 rounded-xl border border-border bg-surface-2 p-4">
+            <p className="text-xs font-semibold text-foreground">Next steps (Week 2)</p>
+            <ul className="mt-2 space-y-1 text-xs text-muted-foreground">
+              <li>• Create workspace/org</li>
+              <li>• Generate External ID automatically</li>
+              <li>• Connect AWS + validate permissions</li>
+            </ul>
           </div>
-
-          <div>
-            <label htmlFor="password" className="text-sm font-medium text-zinc-900">
-              Password
-            </label>
-            <input
-              id="password"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="Minimum 8 characters"
-              className="mt-2 w-full rounded-xl border border-zinc-200 bg-white px-3 py-2.5 text-sm outline-none focus:border-zinc-400"
-              autoComplete="new-password"
-            />
-            <p className="mt-2 text-xs text-zinc-500">
-              Use at least 8 characters. Auth rules will be enforced in Week 2.
-            </p>
-          </div>
-
-          <button
-            type="submit"
-            disabled={!canSubmit}
-            className={[
-              "mt-2 inline-flex w-full items-center justify-center rounded-xl px-4 py-2.5 text-sm font-semibold transition-colors",
-              canSubmit
-                ? "bg-zinc-900 text-white hover:bg-zinc-800"
-                : "bg-zinc-200 text-zinc-500 cursor-not-allowed",
-            ].join(" ")}
-          >
-            {loading ? "Creating..." : "Create account"}
-          </button>
-        </form>
-
-        <div className="mt-5 text-sm text-zinc-600">
-          Already have an account?{" "}
-          <Link href="/login" className="font-semibold text-zinc-900 hover:underline">
-            Sign in
-          </Link>
-        </div>
-
-        <div className="mt-6 rounded-xl border border-zinc-200 bg-zinc-50 p-4">
-          <p className="text-xs font-semibold text-zinc-900">Next steps (Week 2)</p>
-          <ul className="mt-2 space-y-1 text-xs text-zinc-600">
-            <li>• Create workspace/org</li>
-            <li>• Generate External ID automatically</li>
-            <li>• Connect AWS + validate permissions</li>
-          </ul>
-        </div>
-      </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }
