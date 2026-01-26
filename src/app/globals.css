@@ -3,17 +3,18 @@
 /* Tailwind v4 tokens (utilities like bg-background, text-foreground, etc.) */
 :root {
   /* Core surfaces (dark) */
-/* Pure black base */
---color-background: oklch(0 0 0);
---color-foreground: oklch(0.98 0 0);
+  /* Pure black base */
+  --color-background: #000000;
+  --color-background: oklch(0 0 0);
+  --color-foreground: oklch(0.98 0 0);
 
-/* Slightly lifted surfaces so cards are visible on black */
---color-surface: oklch(0.14 0 0);
---color-surface-2: oklch(0.18 0 0);
+  /* Slightly lifted surfaces so cards are visible on black */
+  --color-surface: oklch(0.14 0 0);
+  --color-surface-2: oklch(0.18 0 0);
 
---color-border: oklch(0.26 0 0);
---color-muted: oklch(0.18 0 0);
---color-muted-foreground: oklch(0.72 0 0);
+  --color-border: oklch(0.26 0 0);
+  --color-muted: oklch(0.18 0 0);
+  --color-muted-foreground: oklch(0.72 0 0);
 
   /* Brand */
   --color-primary: oklch(0.70 0.16 260);
@@ -41,6 +42,7 @@
 html,
 body {
   height: 100%;
+  background-color: var(--color-background);
 }
 
 * {
