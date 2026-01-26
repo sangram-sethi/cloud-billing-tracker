@@ -3,6 +3,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import AppSidebarNav from "@/components/AppSidebarNav";
+import PageTransition from "@/components/PageTransition";
 
 export default function AppLayout({ children }: { children: ReactNode }) {
   return (
@@ -46,7 +47,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
         </aside>
 
         {/* Main */}
-        <main className="min-w-0">{children}</main>
+        <main className="min-w-0"><PageTransition>{children}</PageTransition></main>
       </div>
     </div>
   );
