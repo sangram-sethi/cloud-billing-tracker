@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { ShieldCheck, KeyRound, Lock, Eye, FileText, Check, Plug } from "lucide-react";
+import { LinkButton } from "@/components/ui/LinkButton";
 
 const principles = [
   {
@@ -40,19 +41,15 @@ export default function SecurityPage() {
         </p>
 
         <div className="flex flex-col gap-3 sm:flex-row">
-          <Link
-            href="/app/connect-aws"
-            className="inline-flex items-center justify-center gap-2 rounded-xl bg-foreground px-4 py-2 text-sm font-semibold text-background hover:opacity-90 transition"
-          >
-            <Plug className="h-4 w-4" />
-            Connect AWS
-          </Link>
-          <Link
-            href="/pricing"
-            className="inline-flex items-center justify-center rounded-xl border border-border bg-surface px-4 py-2 text-sm font-semibold text-foreground hover:bg-surface-2 transition"
-          >
-            View pricing
-          </Link>
+          <div className="flex flex-col gap-3 sm:flex-row">
+            <LinkButton href="/app/connect-aws" variant="primary" size="md">
+              <Plug className="h-4 w-4" />
+              Connect AWS
+            </LinkButton>
+            <LinkButton href="/pricing" variant="secondary" size="md">
+              View pricing
+            </LinkButton>
+          </div>
         </div>
       </section>
 
