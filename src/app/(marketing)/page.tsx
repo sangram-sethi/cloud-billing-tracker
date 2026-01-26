@@ -1,148 +1,235 @@
 import Link from "next/link";
-import Container from "@/components/Container";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/Card";
+import { Badge } from "@/components/ui/Badge";
+import {
+  AlertTriangle,
+  ShieldCheck,
+  LineChart,
+  Sparkles,
+  BellRing,
+  FileText,
+  Plug,
+  Check,
+} from "lucide-react";
+
+function CtaLink({
+  href,
+  variant = "primary",
+  children,
+}: {
+  href: string;
+  variant?: "primary" | "secondary";
+  children: React.ReactNode;
+}) {
+  const base =
+    "inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold transition";
+  const cls =
+    variant === "primary"
+      ? "bg-foreground text-background hover:opacity-90"
+      : "border border-border bg-surface text-foreground hover:bg-surface-2";
+
+  return (
+    <Link href={href} className={`${base} ${cls}`}>
+      {children}
+    </Link>
+  );
+}
 
 const features = [
   {
-    title: "Anomaly alerts (AWS-only, v1)",
-    desc: "Get notified when spend patterns spike unexpectedly—before the bill surprises you.",
+    icon: AlertTriangle,
+    title: "Anomaly alerts",
+    desc: "Detect spend spikes fast and notify instantly (email now, WhatsApp later).",
+    tag: "Week 1 UI",
   },
   {
+    icon: FileText,
     title: "Weekly founder report",
-    desc: "A clean summary of cost trends, biggest movers, and what changed this week.",
+    desc: "One-page summary: spend trends, movers, anomalies, and action items.",
+    tag: "Week 1 UI",
   },
   {
-    title: "Optimization suggestions",
-    desc: "Actionable, human-readable tips (right-sizing, idle resources, weird usage patterns).",
+    icon: Plug,
+    title: "AWS-first onboarding",
+    desc: "Connect via IAM Role ARN + External ID. No long-lived access keys.",
+    tag: "MVP",
   },
   {
-    title: "Budget guardrails",
-    desc: "Set thresholds per account/team and stay on top of burn rate.",
+    icon: ShieldCheck,
+    title: "Security-by-default",
+    desc: "Least privilege, read-only billing scope, transparent security docs.",
+    tag: "MVP",
+  },
+  {
+    icon: LineChart,
+    title: "Service-level insights",
+    desc: "See top AWS services by spend with deltas and quick explanations.",
+    tag: "Mocked",
+  },
+  {
+    icon: Sparkles,
+    title: "AI optimization hints",
+    desc: "Actionable suggestions: idle resources, log retention, SP/RIs (soon).",
+    tag: "Mocked",
   },
 ];
 
 export default function MarketingHomePage() {
   return (
-    <div>
+    <div className="space-y-14">
       {/* Hero */}
-      <section className="border-b border-zinc-200">
-        <Container className="py-16 sm:py-20">
-          <div className="max-w-2xl">
-            <p className="inline-flex items-center gap-2 rounded-full border border-zinc-200 px-3 py-1 text-xs font-medium text-zinc-700">
-              <span className="h-2 w-2 rounded-full bg-emerald-500" />
-              AWS-only MVP · Anomaly alerts + weekly report
-            </p>
+      <section className="relative overflow-hidden rounded-2xl border border-border bg-surface p-8 shadow-sm sm:p-10">
+        <div
+          className="pointer-events-none absolute inset-0 opacity-70"
+          style={{
+            background:
+              "radial-gradient(800px circle at 20% 10%, rgba(99,102,241,0.20), transparent 55%), radial-gradient(700px circle at 80% 30%, rgba(99,102,241,0.12), transparent 50%)",
+          }}
+        />
+        <div className="relative">
+          <div className="flex flex-wrap items-center gap-2">
+            <Badge variant="neutral">AWS-only MVP</Badge>
+            <Badge variant="default">Anomaly alerts</Badge>
+            <Badge variant="default">Weekly founder report</Badge>
+          </div>
 
-            <h1 className="mt-6 text-4xl font-semibold tracking-tight text-zinc-900 sm:text-5xl">
-              Stop surprise AWS bills.
-              <span className="text-zinc-600"> Get alerts and a weekly founder report.</span>
-            </h1>
+          <h1 className="mt-5 text-4xl font-semibold tracking-tight text-foreground sm:text-5xl">
+            Stop cloud bills from surprising you.
+          </h1>
 
-            <p className="mt-4 text-base leading-relaxed text-zinc-600 sm:text-lg">
-              Cloud Budget Guard tracks your AWS spend, flags anomalies early, and gives clear
-              optimization steps—so startups don’t get wrecked by sudden spikes.
-            </p>
+          <p className="mt-4 max-w-2xl text-base leading-relaxed text-muted-foreground">
+            Cloud Budget Guard tracks spend, flags anomalies, and sends a weekly founder-friendly summary.
+            Start with AWS. Add GCP/Azure later.
+          </p>
 
-            <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">
-              <Link
-                href="/app"
-                className="inline-flex items-center justify-center rounded-lg bg-zinc-900 px-4 py-2.5 text-sm font-semibold text-white hover:bg-zinc-800 transition-colors"
-              >
-                Get started
-              </Link>
-              <Link
-                href="/pricing"
-                className="inline-flex items-center justify-center rounded-lg border border-zinc-200 px-4 py-2.5 text-sm font-semibold text-zinc-900 hover:bg-zinc-50 transition-colors"
-              >
-                View pricing
-              </Link>
+          <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center">
+            <CtaLink href="/signup" variant="primary">
+              <BellRing className="h-4 w-4" />
+              Get started
+            </CtaLink>
+            <CtaLink href="/security" variant="secondary">
+              <ShieldCheck className="h-4 w-4" />
+              Security model
+            </CtaLink>
+          </div>
+
+          <div className="mt-7 grid gap-3 sm:grid-cols-3">
+            <div className="rounded-xl border border-border bg-surface-2 p-4">
+              <p className="text-xs font-semibold text-foreground">Fast alerts</p>
+              <p className="mt-1 text-sm text-muted-foreground">Catch spikes before month-end.</p>
             </div>
-
-            <div className="mt-8 flex flex-wrap gap-3 text-xs text-zinc-600">
-              <span className="rounded-full border border-zinc-200 px-3 py-1">No credit card for MVP</span>
-              <span className="rounded-full border border-zinc-200 px-3 py-1">SOC2-ready roadmap</span>
-              <span className="rounded-full border border-zinc-200 px-3 py-1">Founder-friendly UI</span>
+            <div className="rounded-xl border border-border bg-surface-2 p-4">
+              <p className="text-xs font-semibold text-foreground">Founder-ready</p>
+              <p className="mt-1 text-sm text-muted-foreground">Weekly summary you’ll actually read.</p>
+            </div>
+            <div className="rounded-xl border border-border bg-surface-2 p-4">
+              <p className="text-xs font-semibold text-foreground">No access keys</p>
+              <p className="mt-1 text-sm text-muted-foreground">IAM role + External ID.</p>
             </div>
           </div>
-        </Container>
+        </div>
       </section>
 
-      {/* Social proof placeholder */}
-      <section>
-        <Container className="py-10">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <p className="text-sm text-zinc-600">
-              Trusted by early-stage teams (placeholder)
+      {/* Social proof / trust strip */}
+      <section className="grid gap-4 lg:grid-cols-3">
+        <Card className="hover:translate-y-0">
+          <CardHeader>
+            <CardTitle>Read-only by default</CardTitle>
+            <CardDescription>Billing & cost metadata scope first</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <ul className="space-y-2 text-sm text-muted-foreground">
+              <li className="flex items-center gap-2">
+                <Check className="h-4 w-4" />
+                No long-lived access keys
+              </li>
+              <li className="flex items-center gap-2">
+                <Check className="h-4 w-4" />
+                Least privilege policy
+              </li>
+              <li className="flex items-center gap-2">
+                <Check className="h-4 w-4" />
+                External ID support
+              </li>
+            </ul>
+          </CardContent>
+        </Card>
+
+        <Card className="hover:translate-y-0">
+          <CardHeader>
+            <CardTitle>Built for small teams</CardTitle>
+            <CardDescription>Startups → Enterprise-ready later</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm text-muted-foreground">
+              Clean dashboards, clear alerts, and simple onboarding. Add advanced controls only when you need them.
             </p>
-            <div className="flex flex-wrap gap-3">
-              {["Startup A", "Studio B", "SaaS C", "Agency D"].map((name) => (
-                <span
-                  key={name}
-                  className="rounded-lg border border-zinc-200 px-3 py-2 text-xs font-medium text-zinc-700"
-                >
-                  {name}
-                </span>
-              ))}
-            </div>
-          </div>
-        </Container>
+          </CardContent>
+        </Card>
+
+        <Card className="hover:translate-y-0">
+          <CardHeader>
+            <CardTitle>Open-source friendly</CardTitle>
+            <CardDescription>We’ll publish it later with clean docs</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm text-muted-foreground">
+              Clear setup, demo mode by default, and security reporting guidelines. (We’ll add OSS hygiene as we go.)
+            </p>
+          </CardContent>
+        </Card>
       </section>
 
       {/* Features */}
-      <section className="border-y border-zinc-200 bg-zinc-50/60">
-        <Container className="py-14">
-          <div className="max-w-2xl">
-            <h2 className="text-2xl font-semibold tracking-tight text-zinc-900">
-              Everything you need for Week 1
-            </h2>
-            <p className="mt-2 text-sm leading-relaxed text-zinc-600">
-              We’ll ship the marketing pages + app shell + mocked dashboard + AWS connect UI first,
-              then wire backend in Week 2.
-            </p>
-          </div>
+      <section className="space-y-4">
+        <div>
+          <h2 className="text-2xl font-semibold tracking-tight text-foreground">What you get</h2>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Premium UX, simple workflows — and hard cost signals when something goes wrong.
+          </p>
+        </div>
 
-          <div className="mt-10 grid gap-4 sm:grid-cols-2">
-            {features.map((f) => (
-              <div
-                key={f.title}
-                className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm"
-              >
-                <h3 className="text-sm font-semibold text-zinc-900">{f.title}</h3>
-                <p className="mt-2 text-sm leading-relaxed text-zinc-600">{f.desc}</p>
-              </div>
-            ))}
-          </div>
-        </Container>
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {features.map((f) => {
+            const Icon = f.icon;
+            return (
+              <Card key={f.title} glow className="min-h-45">
+                <CardHeader>
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="flex items-center gap-2">
+                      <Icon className="h-4 w-4 text-muted-foreground" />
+                      <CardTitle>{f.title}</CardTitle>
+                    </div>
+                    <Badge variant="neutral">{f.tag}</Badge>
+                  </div>
+                  <CardDescription>{f.desc}</CardDescription>
+                </CardHeader>
+              </Card>
+            );
+          })}
+        </div>
       </section>
 
-      {/* Bottom CTA */}
-      <section>
-        <Container className="py-16">
-          <div className="rounded-2xl border border-zinc-200 bg-white p-8 shadow-sm sm:p-10">
-            <div className="max-w-2xl">
-              <h3 className="text-2xl font-semibold tracking-tight text-zinc-900">
-                Ready to see your AWS spend clearly?
-              </h3>
-              <p className="mt-2 text-sm leading-relaxed text-zinc-600">
-                Start with mocked data today. Connect AWS securely when you’re ready.
-              </p>
-
-              <div className="mt-6 flex flex-col gap-3 sm:flex-row">
-                <Link
-                  href="/app"
-                  className="inline-flex items-center justify-center rounded-lg bg-zinc-900 px-4 py-2.5 text-sm font-semibold text-white hover:bg-zinc-800 transition-colors"
-                >
-                  Open dashboard
-                </Link>
-                <Link
-                  href="/security"
-                  className="inline-flex items-center justify-center rounded-lg border border-zinc-200 px-4 py-2.5 text-sm font-semibold text-zinc-900 hover:bg-zinc-50 transition-colors"
-                >
-                  Security details
-                </Link>
-              </div>
-            </div>
+      {/* CTA */}
+      <section className="rounded-2xl border border-border bg-surface p-8 shadow-sm">
+        <div className="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h3 className="text-xl font-semibold tracking-tight text-foreground">
+              Ready to stop surprise bills?
+            </h3>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Start with AWS anomaly alerts + a weekly founder report.
+            </p>
           </div>
-        </Container>
+          <div className="flex flex-col gap-3 sm:flex-row">
+            <CtaLink href="/signup" variant="primary">
+              Get started
+            </CtaLink>
+            <CtaLink href="/pricing" variant="secondary">
+              View pricing
+            </CtaLink>
+          </div>
+        </div>
       </section>
     </div>
   );
