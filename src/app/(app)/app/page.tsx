@@ -84,7 +84,7 @@ export default function AppDashboardPage() {
       {/* KPI cards */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {kpis.map((k) => (
-          <Card key={k.label}>
+          <Card key={k.label} glow>
             <CardContent className="pt-6">
               <p className="text-xs font-medium text-muted-foreground">
                 {k.label}
