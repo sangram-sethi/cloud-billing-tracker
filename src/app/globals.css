@@ -1,5 +1,37 @@
 @import "tailwindcss";
 
+/* Tailwind v4 design tokens (generate utilities like bg-background, text-foreground, etc.) */
+:root {
+  /* Core surfaces */
+  --color-background: oklch(0.985 0.005 260);
+  --color-foreground: oklch(0.18 0.01 260);
+
+  --color-surface: oklch(1 0 0);
+  --color-surface-2: oklch(0.97 0.006 260);
+
+  --color-border: oklch(0.92 0.006 260);
+  --color-muted: oklch(0.96 0.006 260);
+  --color-muted-foreground: oklch(0.47 0.01 260);
+
+  /* Brand */
+  --color-primary: oklch(0.62 0.19 265);
+  --color-primary-foreground: oklch(0.99 0 0);
+
+  /* Semantics */
+  --color-success: oklch(0.72 0.18 150);
+  --color-warning: oklch(0.82 0.16 85);
+  --color-danger: oklch(0.64 0.22 25);
+
+  /* Premium feel: slightly larger radii */
+  --radius-lg: 14px;
+  --radius-xl: 18px;
+  --radius-2xl: 24px;
+
+  /* Motion */
+  --ease-snappy: cubic-bezier(0.2, 0, 0, 1);
+  --ease-fluid: cubic-bezier(0.3, 0, 0, 1);
+}
+
 :root {
   color-scheme: light;
 }
@@ -14,10 +46,12 @@ body {
 }
 
 ::selection {
-  background: rgba(24, 24, 27, 0.12);
+  background: rgba(99, 102, 241, 0.18);
 }
 
 body {
+  background: var(--color-background);
+  color: var(--color-foreground);
   text-rendering: geometricPrecision;
 }
 
