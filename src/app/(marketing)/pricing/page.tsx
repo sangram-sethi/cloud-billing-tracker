@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { Check, Sparkles } from "lucide-react";
+import { LinkButton } from "@/components/ui/LinkButton";
 
 const tiers = [
   {
@@ -108,17 +109,14 @@ export default function PricingPage() {
               </ul>
 
               <div className="mt-6">
-                <Link
+                <LinkButton
                   href={t.cta.href}
-                  className={[
-                    "inline-flex w-full items-center justify-center rounded-xl px-4 py-2 text-sm font-semibold transition",
-                    t.highlight
-                      ? "bg-foreground text-background hover:opacity-90"
-                      : "border border-border bg-surface text-foreground hover:bg-surface-2",
-                  ].join(" ")}
+                  variant={t.highlight ? "primary" : "secondary"}
+                  size="md"
+                  className="w-full"
                 >
                   {t.cta.label}
-                </Link>
+                </LinkButton>
 
                 <p className="mt-3 text-xs text-muted-foreground">
                   {t.name === "Enterprise"
@@ -137,18 +135,14 @@ export default function PricingPage() {
           AWS-only anomaly alerts + weekly founder report, with a premium UI and security-first AWS connection flow.
         </p>
         <div className="mt-4 flex flex-col gap-3 sm:flex-row">
-          <Link
-            href="/signup"
-            className="inline-flex items-center justify-center rounded-xl bg-foreground px-4 py-2 text-sm font-semibold text-background hover:opacity-90 transition"
-          >
-            Start free
-          </Link>
-          <Link
-            href="/security"
-            className="inline-flex items-center justify-center rounded-xl border border-border bg-surface px-4 py-2 text-sm font-semibold text-foreground hover:bg-surface-2 transition"
-          >
-            Security model
-          </Link>
+          <div className="mt-4 flex flex-col gap-3 sm:flex-row">
+            <LinkButton href="/signup" variant="primary" size="md">
+              Start free
+            </LinkButton>
+            <LinkButton href="/security" variant="secondary" size="md">
+              Security model
+            </LinkButton>
+          </div>
         </div>
       </section>
     </div>
