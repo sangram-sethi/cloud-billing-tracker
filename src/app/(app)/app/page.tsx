@@ -1,4 +1,11 @@
 import Link from "next/link";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/Card";
 
 const kpis = [
   { label: "This month spend", value: "$1,842", hint: "+12% vs last month" },
@@ -51,8 +58,10 @@ export default function AppDashboardPage() {
       {/* Header */}
       <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Dashboard</h1>
-          <p className="mt-1 text-sm text-zinc-600">
+          <h1 className="text-2xl font-semibold tracking-tight text-foreground">
+            Dashboard
+          </h1>
+          <p className="mt-1 text-sm text-muted-foreground">
             Mocked data for Week 1. Connect AWS when you’re ready.
           </p>
         </div>
@@ -60,13 +69,13 @@ export default function AppDashboardPage() {
         <div className="flex items-center gap-3">
           <Link
             href="/app/connect-aws"
-            className="rounded-lg bg-zinc-900 px-3 py-2 text-sm font-semibold text-white hover:bg-zinc-800 transition-colors"
+            className="rounded-lg bg-foreground px-3 py-2 text-sm font-semibold text-background hover:opacity-90 transition"
           >
             Connect AWS
           </Link>
           <button
             type="button"
-            className="rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm font-semibold text-zinc-900 hover:bg-zinc-50 transition-colors"
+            className="rounded-lg border border-border bg-surface px-3 py-2 text-sm font-semibold text-foreground hover:bg-surface-2 transition"
           >
             Generate report
           </button>
@@ -76,92 +85,131 @@ export default function AppDashboardPage() {
       {/* KPI cards */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {kpis.map((k) => (
-          <div
-            key={k.label}
-            className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm"
-          >
-            <p className="text-xs font-medium text-zinc-600">{k.label}</p>
-            <p className="mt-2 text-2xl font-semibold tracking-tight text-zinc-900">
-              {k.value}
-            </p>
-            <p className="mt-1 text-xs text-zinc-500">{k.hint}</p>
-          </div>
+          <Card key={k.label}>
+            <CardContent className="pt-6">
+              <p className="text-xs font-medium text-muted-foreground">
+                {k.label}
+              </p>
+              <p className="mt-2 text-2xl font-semibold tracking-tight text-foreground">
+                {k.value}
+              </p>
+              <p className="mt-1 text-xs text-muted-foreground">{k.hint}</p>
+            </CardContent>
+          </Card>
         ))}
       </div>
 
       {/* Main grid */}
       <div className="grid gap-4 lg:grid-cols-3">
         {/* Top services */}
-        <div className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm lg:col-span-2">
-          <div className="flex items-center justify-between">
-            <h2 className="text-sm font-semibold text-zinc-900">Top services (month)</h2>
-            <p className="text-xs text-zinc-500">mock</p>
-          </div>
+        <Card className="lg:col-span-2">
+          <CardHeader className="flex-row items-start justify-between gap-4">
+            <div>
+              <CardTitle>Top services (month)</CardTitle>
+              <CardDescription>Spend distribution by service (mock)</CardDescription>
+            </div>
+            <p className="text-xs text-muted-foreground">mock</p>
+          </CardHeader>
 
-          <div className="mt-4 space-y-3">
-            {topServices.map((s) => {
-              const w = Math.max(6, Math.round((s.spend / maxSpend) * 100));
-              return (
-                <div key={s.name} className="grid grid-cols-[120px_1fr_90px] items-center gap-3">
-                  <div className="text-sm font-medium text-zinc-900">{s.name}</div>
-                  <div className="h-2 rounded-full bg-zinc-100 overflow-hidden">
-                    <div className="h-full bg-zinc-900" style={{ width: `${w}%` }} />
+          <CardContent>
+            <div className="space-y-3">
+              {topServices.map((s) => {
+                const w = Math.max(6, Math.round((s.spend / maxSpend) * 100));
+                return (
+                  <div
+                    key={s.name}
+                    className="grid grid-cols-[120px_1fr_90px] items-center gap-3"
+                  >
+                    <div className="text-sm font-medium text-foreground">
+                      {s.name}
+                    </div>
+                    <div className="h-2 overflow-hidden rounded-full bg-muted">
+                      <div
+                        className="h-full bg-foreground"
+                        style={{ width: `${w}%` }}
+                      />
+                    </div>
+                    <div className="text-right">
+                      <div className="text-sm font-semibold text-foreground">
+                        {dollars(s.spend)}
+                      </div>
+                      <div className="text-xs text-muted-foreground">
+                        {s.change}
+                      </div>
+                    </div>
                   </div>
-                  <div className="text-right">
-                    <div className="text-sm font-semibold text-zinc-900">{dollars(s.spend)}</div>
-                    <div className="text-xs text-zinc-500">{s.change}</div>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
+                );
+              })}
+            </div>
 
-          <div className="mt-5 rounded-xl border border-zinc-200 bg-zinc-50 p-4">
-            <p className="text-xs font-semibold text-zinc-900">AI suggestion (mock)</p>
-            <p className="mt-1 text-sm text-zinc-700">
-              EC2 is trending up. Check for new instance families, idle instances, and consider
-              Savings Plans if usage is steady.
-            </p>
-          </div>
-        </div>
+            <div className="mt-5 rounded-xl border border-border bg-surface-2 p-4">
+              <p className="text-xs font-semibold text-foreground">
+                AI suggestion (mock)
+              </p>
+              <p className="mt-1 text-sm text-muted-foreground">
+                EC2 is trending up. Check for new instance families, idle
+                instances, and consider Savings Plans if usage is steady.
+              </p>
+            </div>
+          </CardContent>
+        </Card>
 
         {/* Alerts */}
-        <div className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm">
-          <div className="flex items-center justify-between">
-            <h2 className="text-sm font-semibold text-zinc-900">Recent alerts</h2>
-            <Link href="/app/reports" className="text-xs font-medium text-zinc-600 hover:text-zinc-900">
+        <Card>
+          <CardHeader className="flex-row items-start justify-between gap-4">
+            <div>
+              <CardTitle>Recent alerts</CardTitle>
+              <CardDescription>Latest anomalies detected (mock)</CardDescription>
+            </div>
+            <Link
+              href="/app/reports"
+              className="text-xs font-medium text-muted-foreground hover:text-foreground transition"
+            >
               View all
             </Link>
-          </div>
+          </CardHeader>
 
-          <div className="mt-4 space-y-3">
-            {anomalies.map((a) => (
-              <div key={a.id} className="rounded-xl border border-zinc-200 p-4">
-                <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <p className="text-sm font-semibold text-zinc-900">{a.title}</p>
-                    <p className="mt-1 text-xs text-zinc-500">{a.when}</p>
+          <CardContent>
+            <div className="space-y-3">
+              {anomalies.map((a) => (
+                <div
+                  key={a.id}
+                  className="rounded-xl border border-border bg-surface p-4"
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <p className="text-sm font-semibold text-foreground">
+                        {a.title}
+                      </p>
+                      <p className="mt-1 text-xs text-muted-foreground">
+                        {a.when}
+                      </p>
+                    </div>
+
+                    <span
+                      className={[
+                        "rounded-full px-2.5 py-1 text-[11px] font-semibold border",
+                        a.severity === "High"
+                          ? "bg-danger/10 text-danger border-danger/20"
+                          : "bg-warning/10 text-warning border-warning/20",
+                      ].join(" ")}
+                    >
+                      {a.severity}
+                    </span>
                   </div>
-                  <span
-                    className={[
-                      "rounded-full px-2.5 py-1 text-[11px] font-semibold",
-                      a.severity === "High"
-                        ? "bg-red-50 text-red-700 border border-red-200"
-                        : "bg-amber-50 text-amber-700 border border-amber-200",
-                    ].join(" ")}
-                  >
-                    {a.severity}
-                  </span>
-                </div>
-                <p className="mt-2 text-sm text-zinc-600">{a.note}</p>
-              </div>
-            ))}
-          </div>
 
-          <div className="mt-4 text-xs text-zinc-500">
-            Alerts will be email/WhatsApp in later phases.
-          </div>
-        </div>
+                  <p className="mt-2 text-sm text-muted-foreground">
+                    {a.note}
+                  </p>
+                </div>
+              ))}
+            </div>
+
+            <div className="mt-4 text-xs text-muted-foreground">
+              Alerts will be email/WhatsApp in later phases.
+            </div>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );
