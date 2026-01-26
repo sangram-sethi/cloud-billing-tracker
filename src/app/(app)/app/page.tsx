@@ -8,6 +8,7 @@ import {
 } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
+import { GlowCard } from "@/components/ui/GlowCard";
 
 const kpis = [
   { label: "This month spend", value: "$1,842", hint: "+12% vs last month" },
@@ -84,7 +85,7 @@ export default function AppDashboardPage() {
       {/* KPI cards */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {kpis.map((k) => (
-          <Card key={k.label} glow>
+          <GlowCard key={k.label}>
             <CardContent className="pt-6">
               <p className="text-xs font-medium text-muted-foreground">
                 {k.label}
@@ -94,7 +95,7 @@ export default function AppDashboardPage() {
               </p>
               <p className="mt-1 text-xs text-muted-foreground">{k.hint}</p>
             </CardContent>
-          </Card>
+          </GlowCard>
         ))}
       </div>
 
