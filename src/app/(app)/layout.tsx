@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
+import AppSidebarNav from "@/components/AppSidebarNav";
 
 export default function AppLayout({ children }: { children: ReactNode }) {
   return (
@@ -33,33 +34,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
         <aside className="hidden lg:block">
           <Card className="hover:translate-y-0">
             <div className="p-3">
-              <nav className="flex flex-col gap-1">
-                <Link
-                  href="/app"
-                  className="rounded-xl px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-surface-2 hover:text-foreground transition"
-                >
-                  Dashboard
-                </Link>
-                <Link
-                  href="/app/connect-aws"
-                  className="rounded-xl px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-surface-2 hover:text-foreground transition"
-                >
-                  Connect AWS
-                </Link>
-                <Link
-                  href="/app/reports"
-                  className="rounded-xl px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-surface-2 hover:text-foreground transition"
-                >
-                  Reports
-                </Link>
-                <Link
-                  href="/app/settings"
-                  className="rounded-xl px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-surface-2 hover:text-foreground transition"
-                >
-                  Settings
-                </Link>
-              </nav>
-
+              <AppSidebarNav />
               <div className="mt-4 rounded-xl border border-border bg-surface-2 p-3">
                 <p className="text-xs font-semibold text-foreground">MVP status</p>
                 <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
