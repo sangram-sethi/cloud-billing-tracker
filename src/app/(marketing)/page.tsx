@@ -11,29 +11,9 @@ import {
   Plug,
   Check,
 } from "lucide-react";
+import { LinkButton } from "@/components/ui/LinkButton";
 
-function CtaLink({
-  href,
-  variant = "primary",
-  children,
-}: {
-  href: string;
-  variant?: "primary" | "secondary";
-  children: React.ReactNode;
-}) {
-  const base =
-    "inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold transition";
-  const cls =
-    variant === "primary"
-      ? "bg-foreground text-background hover:opacity-90"
-      : "border border-border bg-surface text-foreground hover:bg-surface-2";
 
-  return (
-    <Link href={href} className={`${base} ${cls}`}>
-      {children}
-    </Link>
-  );
-}
 
 const features = [
   {
@@ -103,14 +83,14 @@ export default function MarketingHomePage() {
           </p>
 
           <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center">
-            <CtaLink href="/signup" variant="primary">
+            <LinkButton href="/signup" variant="primary" size="md">
               <BellRing className="h-4 w-4" />
               Get started
-            </CtaLink>
-            <CtaLink href="/security" variant="secondary">
+            </LinkButton>
+            <LinkButton href="/security" variant="secondary" size="md">
               <ShieldCheck className="h-4 w-4" />
               Security model
-            </CtaLink>
+            </LinkButton>
           </div>
 
           <div className="mt-7 grid gap-3 sm:grid-cols-3">
@@ -222,12 +202,12 @@ export default function MarketingHomePage() {
             </p>
           </div>
           <div className="flex flex-col gap-3 sm:flex-row">
-            <CtaLink href="/signup" variant="primary">
+            <LinkButton href="/signup" variant="primary" size="md">
               Get started
-            </CtaLink>
-            <CtaLink href="/pricing" variant="secondary">
+            </LinkButton>
+            <LinkButton href="/pricing" variant="secondary" size="md">
               View pricing
-            </CtaLink>
+            </LinkButton>
           </div>
         </div>
       </section>
