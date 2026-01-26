@@ -1,26 +1,28 @@
 @import "tailwindcss";
 
-/* Tailwind v4 design tokens (generate utilities like bg-background, text-foreground, etc.) */
+/* Tailwind v4 tokens (utilities like bg-background, text-foreground, etc.) */
 :root {
-  /* Core surfaces */
-  --color-background: oklch(0.985 0.005 260);
-  --color-foreground: oklch(0.18 0.01 260);
+  /* Core surfaces (dark) */
+/* Pure black base */
+--color-background: oklch(0 0 0);
+--color-foreground: oklch(0.98 0 0);
 
-  --color-surface: oklch(1 0 0);
-  --color-surface-2: oklch(0.97 0.006 260);
+/* Slightly lifted surfaces so cards are visible on black */
+--color-surface: oklch(0.14 0 0);
+--color-surface-2: oklch(0.18 0 0);
 
-  --color-border: oklch(0.92 0.006 260);
-  --color-muted: oklch(0.96 0.006 260);
-  --color-muted-foreground: oklch(0.47 0.01 260);
+--color-border: oklch(0.26 0 0);
+--color-muted: oklch(0.18 0 0);
+--color-muted-foreground: oklch(0.72 0 0);
 
   /* Brand */
-  --color-primary: oklch(0.62 0.19 265);
-  --color-primary-foreground: oklch(0.99 0 0);
+  --color-primary: oklch(0.70 0.16 260);
+  --color-primary-foreground: oklch(0.12 0.02 264);
 
   /* Semantics */
-  --color-success: oklch(0.72 0.18 150);
-  --color-warning: oklch(0.82 0.16 85);
-  --color-danger: oklch(0.64 0.22 25);
+  --color-success: oklch(0.70 0.14 145);
+  --color-warning: oklch(0.80 0.16 85);
+  --color-danger: oklch(0.68 0.20 25);
 
   /* Premium feel: slightly larger radii */
   --radius-lg: 14px;
@@ -33,7 +35,7 @@
 }
 
 :root {
-  color-scheme: light;
+  color-scheme: dark;
 }
 
 html,
@@ -46,12 +48,16 @@ body {
 }
 
 ::selection {
-  background: rgba(99, 102, 241, 0.18);
+  background: rgba(99, 102, 241, 0.22);
 }
 
 body {
-  background: var(--color-background);
+  min-height: 100vh;
+  overflow-x: hidden;
+
+  background-color: var(--color-background);
   color: var(--color-foreground);
+
   text-rendering: geometricPrecision;
 }
 
@@ -60,7 +66,7 @@ a {
   text-decoration: none;
 }
 
-/* Premium hover glow (subtle, only when you choose to apply it) */
+/* Premium hover glow (only on elements that opt-in via `glow-card` or Card glow prop) */
 .glow-card {
   position: relative;
 }
@@ -73,12 +79,14 @@ a {
   pointer-events: none;
   opacity: 0;
   transition: opacity 200ms var(--ease-snappy);
+
+  /* Subtle highlight ring + glow */
   background: radial-gradient(
       600px circle at var(--mx, 50%) var(--my, 20%),
       rgba(99, 102, 241, 0.22),
       transparent 55%
     ),
-    linear-gradient(to bottom, rgba(255, 255, 255, 0.6), rgba(255, 255, 255, 0));
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.18), rgba(255, 255, 255, 0));
 }
 
 .glow-card:hover::before {

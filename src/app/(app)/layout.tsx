@@ -7,7 +7,7 @@ import PageTransition from "@/components/PageTransition";
 
 export default function AppLayout({ children }: { children: ReactNode }) {
   return (
-    <div className="min-h-screen bg-background text-foreground">
+    <div className="min-h-screen bg-transparent text-foreground">
       {/* Top bar */}
       <header className="sticky top-0 z-40 border-b border-border bg-surface/80 backdrop-blur">
         <div className="mx-auto flex h-14 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">

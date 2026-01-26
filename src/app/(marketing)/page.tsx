@@ -59,13 +59,6 @@ export default function MarketingHomePage() {
     <div className="space-y-14">
       {/* Hero */}
       <section className="relative overflow-hidden rounded-2xl border border-border bg-surface p-8 shadow-sm sm:p-10">
-        <div
-          className="pointer-events-none absolute inset-0 opacity-70"
-          style={{
-            background:
-              "radial-gradient(800px circle at 20% 10%, rgba(99,102,241,0.20), transparent 55%), radial-gradient(700px circle at 80% 30%, rgba(99,102,241,0.12), transparent 50%)",
-          }}
-        />
         <div className="relative">
           <div className="flex flex-wrap items-center gap-2">
             <Badge variant="neutral">AWS-only MVP</Badge>
