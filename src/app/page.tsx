@@ -1,5 +1,7 @@
 import Container from "@/components/Container";
 import NavLink from "@/components/NavLink";
+import MarketingHeader from "@/components/MarketingHeader";
+
 
 export default function Home() {
   return (
