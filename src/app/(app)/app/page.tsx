@@ -6,6 +6,7 @@ import {
   CardTitle,
   CardDescription,
 } from "@/components/ui/Card";
+import { Button } from "@/components/ui/Button";
 
 const kpis = [
   { label: "This month spend", value: "$1,842", hint: "+12% vs last month" },
@@ -73,12 +74,9 @@ export default function AppDashboardPage() {
           >
             Connect AWS
           </Link>
-          <button
-            type="button"
-            className="rounded-lg border border-border bg-surface px-3 py-2 text-sm font-semibold text-foreground hover:bg-surface-2 transition"
-          >
+          <Button type="button" variant="secondary" size="md">
             Generate report
-          </button>
+          </Button>
         </div>
       </div>
 
