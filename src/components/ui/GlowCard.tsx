@@ -1,32 +1,43 @@
 "use client";
 
 import * as React from "react";
-import { Card } from "@/components/ui/Card";
+import { cn } from "@/lib/cn";
+import { Card } from "./Card";
 
-type Props = React.ComponentProps<typeof Card>;
+type Props = React.ComponentPropsWithoutRef<typeof Card> & {
+  glowRgb?: string; // e.g. "124 58 237"
+};
 
-export function GlowCard({ className, ...props }: Props) {
-  const ref = React.useRef<HTMLDivElement | null>(null);
+export const GlowCard = React.forwardRef<HTMLDivElement, Props>(
+  ({ className, glowRgb = "124 58 237", onMouseMove, onMouseLeave, ...props }, ref) => {
+    function handleMove(e: React.MouseEvent<HTMLDivElement>) {
+      const el = e.currentTarget;
+      const r = el.getBoundingClientRect();
+      const x = ((e.clientX - r.left) / r.width) * 100;
+      const y = ((e.clientY - r.top) / r.height) * 100;
 
-  function onMove(e: React.MouseEvent<HTMLDivElement>) {
-    const el = ref.current;
-    if (!el) return;
+      el.style.setProperty("--glow-x", `${x}%`);
+      el.style.setProperty("--glow-y", `${y}%`);
+      el.style.setProperty("--glow-opacity", "1");
+      el.style.setProperty("--glow-rgb", glowRgb);
 
-    const r = el.getBoundingClientRect();
-    const x = ((e.clientX - r.left) / r.width) * 100;
-    const y = ((e.clientY - r.top) / r.height) * 100;
+      onMouseMove?.(e);
+    }
 
-    el.style.setProperty("--mx", `${x}%`);
-    el.style.setProperty("--my", `${y}%`);
+    function handleLeave(e: React.MouseEvent<HTMLDivElement>) {
+      e.currentTarget.style.setProperty("--glow-opacity", "0");
+      onMouseLeave?.(e);
+    }
+
+    return (
+      <Card
+        ref={ref}
+        className={cn("glow-card", className)}
+        onMouseMove={handleMove}
+        onMouseLeave={handleLeave}
+        {...props}
+      />
+    );
   }
-
-  return (
-    <Card
-      ref={ref}
-      glow
-      onMouseMove={onMove}
-      className={className}
-      {...props}
-    />
-  );
-}
+);
+GlowCard.displayName = "GlowCard";

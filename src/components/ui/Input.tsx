@@ -1,34 +1,35 @@
 import * as React from "react";
+import { cn } from "@/lib/cn";
 
-function cn(...classes: Array<string | undefined | false>) {
-  return classes.filter(Boolean).join(" ");
+type InputState = "default" | "success" | "error";
+
+export interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
+  state?: InputState;
 }
 
-type State = "default" | "error" | "success";
-
-export type InputProps = React.InputHTMLAttributes<HTMLInputElement> & {
-  state?: State;
+const stateStyles: Record<InputState, string> = {
+  default:
+    "border-border/70 focus-visible:border-primary/40 focus-visible:ring-primary/20",
+  success:
+    "border-success/40 focus-visible:border-success/60 focus-visible:ring-success/20",
+  error:
+    "border-danger/45 focus-visible:border-danger/70 focus-visible:ring-danger/20",
 };
 
 export const Input = React.forwardRef<HTMLInputElement, InputProps>(
-  ({ className, state = "default", ...props }, ref) => {
-    const stateCls =
-      state === "error"
-        ? "border-danger/50 focus-visible:border-danger/60 focus-visible:ring-danger/20"
-        : state === "success"
-        ? "border-success/50 focus-visible:border-success/60 focus-visible:ring-success/20"
-        : "focus-visible:ring-primary/20";
-
+  ({ className, type, state = "default", ...props }, ref) => {
     return (
       <input
         ref={ref}
+        type={type}
         className={cn(
-          "h-10 w-full rounded-xl border border-border/70 bg-surface/60 px-3 text-sm text-foreground backdrop-blur",
-          "placeholder:text-muted-foreground",
-          "outline-none",
-          "transition-[box-shadow,border-color,background-color] duration-200 ease-(--ease-snappy)",
-          "focus-visible:ring-2 focus-visible:ring-offset-0 focus-visible:border-border",
-          stateCls,
+          "h-11 w-full rounded-2xl border bg-surface/55 px-3 text-sm text-foreground " +
+            "shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] backdrop-blur " +
+            "outline-none transition-[box-shadow,border-color,background-color] duration-200 " +
+            "ease-(--ease-snappy) " +
+            "placeholder:text-muted-foreground/70 " +
+            "focus-visible:ring-2",
+          stateStyles[state],
           className
         )}
         {...props}
@@ -36,5 +37,4 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
     );
   }
 );
-
 Input.displayName = "Input";

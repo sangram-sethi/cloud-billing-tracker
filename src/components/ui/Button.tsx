@@ -1,52 +1,48 @@
-import type { ButtonHTMLAttributes } from "react";
+import * as React from "react";
+import { cn } from "@/lib/cn";
 
-function cn(...classes: Array<string | undefined | false>) {
-  return classes.filter(Boolean).join(" ");
+type ButtonVariant = "primary" | "secondary" | "ghost" | "danger";
+type ButtonSize = "sm" | "md" | "lg";
+
+export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+  variant?: ButtonVariant;
+  size?: ButtonSize;
 }
 
-type Variant = "primary" | "secondary" | "ghost" | "danger";
-type Size = "sm" | "md" | "lg";
-
-type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
-  variant?: Variant;
-  size?: Size;
-};
-
 const base =
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap select-none cursor-pointer " +
-  "rounded-full text-sm font-medium tracking-tight " +
-  "transition-[transform,opacity,background-color,border-color,color,box-shadow] duration-200 ease-[var(--ease-snappy)] " +
-  "hover:-translate-y-[0.5px] active:translate-y-0 active:scale-[0.99] " +
-  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25 focus-visible:ring-offset-0 " +
-  "disabled:opacity-60 disabled:cursor-not-allowed";
+  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-full font-semibold " +
+  "outline-none transition-[transform,opacity,background-color,border-color,color,box-shadow] duration-200 " +
+  "[transition-timing-function:var(--ease-snappy)] " +
+  "focus-visible:ring-2 focus-visible:ring-primary/25 focus-visible:ring-offset-0 " +
+  "disabled:pointer-events-none disabled:opacity-50 active:scale-[0.99]";
 
-const variants: Record<Variant, string> = {
+const variants: Record<ButtonVariant, string> = {
+  /* BrainLoom-like: primary = white pill */
   primary:
-    "bg-foreground text-background border border-transparent hover:opacity-90 shadow-[0_18px_60px_-40px_rgba(255,255,255,0.35)]",
+    "bg-foreground text-background shadow-[0_0_0_1px_rgba(255,255,255,0.10),0_18px_60px_rgba(0,0,0,0.55)] " +
+    "hover:opacity-95",
   secondary:
-    "border border-border/70 bg-surface/40 text-foreground backdrop-blur hover:bg-surface/60",
+    "border border-border/70 bg-surface/60 text-foreground backdrop-blur " +
+    "shadow-[0_0_0_1px_rgba(255,255,255,0.03)] hover:bg-surface-2/70",
   ghost:
-    "bg-transparent text-foreground border border-transparent hover:bg-surface/50",
+    "bg-transparent text-muted-foreground hover:text-foreground hover:bg-surface/40",
   danger:
-    "bg-danger text-white border border-transparent hover:opacity-90",
+    "bg-danger text-primary-foreground shadow-[0_0_0_1px_rgba(255,255,255,0.08)] hover:opacity-95",
 };
 
-const sizes: Record<Size, string> = {
-  sm: "h-9 px-4",
-  md: "h-10 px-5",
-  lg: "h-12 px-7",
+const sizes: Record<ButtonSize, string> = {
+  sm: "h-9 px-4 text-sm",
+  md: "h-11 px-6 text-sm",
+  lg: "h-12 px-7 text-base",
 };
 
 export function Button({
   className,
-  variant = "primary",
+  variant = "secondary",
   size = "md",
   ...props
 }: ButtonProps) {
   return (
-    <button
-      className={cn(base, variants[variant], sizes[size], className)}
-      {...props}
-    />
+    <button className={cn(base, variants[variant], sizes[size], className)} {...props} />
   );
 }

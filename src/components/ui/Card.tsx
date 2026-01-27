@@ -1,47 +1,46 @@
 import * as React from "react";
+import { cn } from "@/lib/cn";
 
-function cn(...classes: Array<string | undefined | false>) {
-  return classes.filter(Boolean).join(" ");
-}
-
-type CardProps = React.HTMLAttributes<HTMLDivElement> & {
-  glow?: boolean;
-};
-
-export const Card = React.forwardRef<HTMLDivElement, CardProps>(function Card(
-  { className, glow = false, ...props },
-  ref
-) {
-  return (
+export const Card = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
+  ({ className, ...props }, ref) => (
     <div
       ref={ref}
       className={cn(
-        "relative rounded-2xl border border-border/60 bg-surface/60 backdrop-blur",
-        "shadow-[0_1px_0_0_rgba(255,255,255,0.05)_inset]",
-        "transition-[transform,box-shadow,border-color,background-color] duration-200 ease-(--ease-snappy)",
-        "hover:-translate-y-px hover:border-border hover:bg-surface/70",
-        glow && "glow-card",
+        "relative rounded-3xl border border-border/70 bg-surface/55 backdrop-blur " +
+          "shadow-[0_0_0_1px_rgba(255,255,255,0.03),0_28px_90px_rgba(0,0,0,0.55)] " +
+          "overflow-hidden",
+        /* subtle inner highlight */
+        "before:pointer-events-none before:absolute before:inset-0 before:rounded-3xl " +
+          "before:bg-[radial-gradient(1200px_circle_at_50%_0%,rgba(255,255,255,0.06),transparent_55%)]",
         className
       )}
       {...props}
     />
-  );
-});
+  )
+);
+Card.displayName = "Card";
 
 export function CardHeader({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
-  return <div className={cn("px-6 pt-6", className)} {...props} />;
-}
-
-export function CardContent({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
-  return <div className={cn("px-6 pb-6", className)} {...props} />;
+  return <div className={cn("flex flex-col gap-1.5 p-6", className)} {...props} />;
 }
 
 export function CardTitle({ className, ...props }: React.HTMLAttributes<HTMLHeadingElement>) {
-  return <h3 className={cn("text-sm font-semibold text-foreground", className)} {...props} />;
+  return (
+    <h3
+      className={cn("text-base font-semibold tracking-tight text-foreground", className)}
+      {...props}
+    />
+  );
 }
 
 export function CardDescription({ className, ...props }: React.HTMLAttributes<HTMLParagraphElement>) {
-  return (
-    <p className={cn("mt-1 text-sm leading-relaxed text-muted-foreground", className)} {...props} />
-  );
+  return <p className={cn("text-sm text-muted-foreground", className)} {...props} />;
+}
+
+export function CardContent({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
+  return <div className={cn("p-6 pt-0", className)} {...props} />;
+}
+
+export function CardFooter({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
+  return <div className={cn("flex items-center p-6 pt-0", className)} {...props} />;
 }
