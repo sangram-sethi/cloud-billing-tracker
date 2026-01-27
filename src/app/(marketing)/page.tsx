@@ -1,11 +1,15 @@
 import { Container } from "@/components/Container";
 import { LinkButton } from "@/components/ui/LinkButton";
-import { Badge } from "@/components/ui/Badge";
 import { DeviceFrame } from "@/components/DeviceFrame";
-import { DemoVideo } from "@/components/DemoVideo";
+import { DashboardShowcase } from "@/components/marketing/DashboardShowcase";
+import { AlertsShowcase } from "@/components/marketing/AlertsShowcase";
 import { ArrowRight, Sparkles, Shield, BellRing, LineChart } from "lucide-react";
 
-function SectionGlow({ tone = "violet" }: { tone?: "violet" | "blue" | "green" | "red" }) {
+function SectionGlow({
+  tone = "violet",
+}: {
+  tone?: "violet" | "blue" | "green" | "red";
+}) {
   const map: Record<string, string> = {
     violet: "rgba(124,58,237,0.18)",
     blue: "rgba(59,130,246,0.16)",
@@ -39,7 +43,9 @@ export default function MarketingHome() {
             <div className="flex justify-center">
               <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-surface/35 px-4 py-2 text-xs text-muted-foreground backdrop-blur">
                 <span className="h-2 w-2 rounded-full bg-success" />
-                <span className="text-foreground/90 font-semibold">CloudBudgetGuard</span>
+                <span className="text-foreground/90 font-semibold">
+                  CloudBudgetGuard
+                </span>
                 <span className="text-muted-foreground">•</span>
                 <span>AWS-only • anomaly alerts • weekly founder report</span>
               </div>
@@ -52,15 +58,26 @@ export default function MarketingHome() {
             </h1>
 
             <p className="mx-auto mt-6 max-w-2xl text-base leading-relaxed text-muted-foreground">
-              Track spend. Detect spikes. Get weekly executive summaries with suggested fixes.
-              Built to feel premium — because founders judge trust by UI.
+              Track spend. Detect spikes. Get weekly executive summaries with
+              suggested fixes. Built to feel premium — because founders judge
+              trust by UI.
             </p>
 
             <div className="mt-10 flex flex-col items-center justify-center gap-3 sm:flex-row">
-              <LinkButton href="/signup" variant="primary" size="lg" className="gap-2">
+              <LinkButton
+                href="/signup"
+                variant="primary"
+                size="lg"
+                className="gap-2"
+              >
                 Start Free <ArrowRight className="h-5 w-5" />
               </LinkButton>
-              <LinkButton href="/pricing" variant="secondary" size="lg" className="gap-2">
+              <LinkButton
+                href="/pricing"
+                variant="secondary"
+                size="lg"
+                className="gap-2"
+              >
                 How it works <Sparkles className="h-5 w-5" />
               </LinkButton>
             </div>
@@ -70,7 +87,8 @@ export default function MarketingHome() {
                 <Shield className="h-4 w-4" /> Read-only billing scope
               </span>
               <span className="inline-flex items-center gap-2">
-                <BellRing className="h-4 w-4" /> Alerts (email now, WhatsApp later)
+                <BellRing className="h-4 w-4" /> Alerts (email now, WhatsApp
+                later)
               </span>
               <span className="inline-flex items-center gap-2">
                 <LineChart className="h-4 w-4" /> Weekly founder report
@@ -81,8 +99,7 @@ export default function MarketingHome() {
           {/* Demo frame */}
           <div className="mx-auto mt-14 max-w-6xl">
             <DeviceFrame>
-              {/* Replace src with your real screen recording path in /public/demos */}
-              <DemoVideo src="/demos/dashboard.mp4" className="aspect-video" />
+              <DashboardShowcase />
             </DeviceFrame>
           </div>
         </Container>
@@ -98,14 +115,17 @@ export default function MarketingHome() {
                 <span className="grid h-6 w-6 place-items-center rounded-lg bg-white/5">
                   <Sparkles className="h-4 w-4 text-primary" />
                 </span>
-                <span className="tracking-widest text-primary">PHASE 01: ALERTS</span>
+                <span className="tracking-widest text-primary">
+                  PHASE 01: ALERTS
+                </span>
               </div>
 
               <h2 className="mt-6 text-4xl font-semibold tracking-tight text-foreground">
                 Anomalies that actually matter.
               </h2>
               <p className="mt-4 text-base leading-relaxed text-muted-foreground">
-                Detect spend spikes (EC2, NAT, logs), explain why it happened, and suggest next actions.
+                Detect spend spikes (EC2, NAT, logs), explain why it happened,
+                and suggest next actions.
               </p>
 
               <ul className="mt-6 space-y-3 text-sm text-muted-foreground">
@@ -125,7 +145,7 @@ export default function MarketingHome() {
             </div>
 
             <DeviceFrame className="lg:translate-y-2">
-              <DemoVideo src="/demos/alerts.mp4" className="aspect-16/10" />
+              <AlertsShowcase />
             </DeviceFrame>
           </div>
         </Container>
