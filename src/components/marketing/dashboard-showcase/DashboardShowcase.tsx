@@ -20,6 +20,11 @@ import { IconButton } from "./components/IconButton";
 import { Popovers } from "./components/Popovers";
 
 import { OverviewView } from "./views/OverviewView";
+import { AlertsView } from "./views/AlertsView";
+import { BudgetsView } from "./views/BudgetsView";
+import { ReportsView } from "./views/ReportsView";
+import { SettingsView } from "./views/SettingsView";
+
 
 export function DashboardShowcase({ className }: { className?: string }) {
   const rootRef = React.useRef<HTMLDivElement | null>(null);
@@ -278,34 +283,41 @@ export function DashboardShowcase({ className }: { className?: string }) {
               />
             ) : null}
           </div>
-
-          {/* Views */}
-          <div className="min-h-0 flex-1 p-4">
-            {view === "overview" ? (
-              <OverviewView
-                range={range}
-                base={base}
-                region={region}
-                activeService={activeService}
-                hotRegion={hotRegion}
-                mtd={mtd}
-                today={today}
-                forecast={forecast}
-                score={score}
-                q={q}
-                servicesFiltered={servicesFiltered}
-                anomaliesFiltered={anomaliesFiltered}
-                focusService={focusService}
-                setFocusService={setFocusService}
-              />
-            ) : (
-              <div className="grid h-full place-items-center rounded-3xl border border-white/10 bg-surface/20">
-                <div className="text-sm text-muted-foreground">
-                  Paste the remaining view files, then wire them here.
-                </div>
-              </div>
-            )}
-          </div>
+{/* Views */}
+<div className="min-h-0 flex-1 p-4">
+  {view === "overview" ? (
+    <OverviewView
+      range={range}
+      base={base}
+      region={region}
+      activeService={activeService}
+      hotRegion={hotRegion}
+      mtd={mtd}
+      today={today}
+      forecast={forecast}
+      score={score}
+      q={q}
+      servicesFiltered={servicesFiltered}
+      anomaliesFiltered={anomaliesFiltered}
+      focusService={focusService}
+      setFocusService={setFocusService}
+    />
+  ) : view === "alerts" ? (
+    <AlertsView range={range} base={base} anomaliesFiltered={anomaliesFiltered} />
+  ) : view === "budgets" ? (
+    <BudgetsView
+      range={range}
+      base={base}
+      mtd={mtd}
+      forecast={forecast}
+      servicesFiltered={servicesFiltered}
+    />
+  ) : view === "reports" ? (
+    <ReportsView range={range} base={base} mtd={mtd} forecast={forecast} />
+  ) : (
+    <SettingsView />
+  )}
+</div>
         </section>
       </div>
 
