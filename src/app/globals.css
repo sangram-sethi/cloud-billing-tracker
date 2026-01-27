@@ -1,151 +1,120 @@
 @import "tailwindcss";
 
+/* Tailwind v4: CSS-first theme tokens */
 :root {
-  /* Tailwind v4 tokens */
-  --color-background: 0 0% 0%;
-  --color-foreground: 0 0% 98%;
-  --color-muted: 0 0% 65%;
-  --color-border: 0 0% 16%;
-  --color-surface: 0 0% 5%;
-  --color-surface-2: 0 0% 8%;
-  --color-primary: 215 100% 70%;
-  --color-primary-2: 280 100% 72%;
-  --color-success: 152 76% 45%;
-  --color-danger: 0 84% 60%;
+  /* Core surfaces */
+  --color-background: oklch(0 0 0);               /* true black */
+  --color-foreground: oklch(0.98 0 0);            /* near-white */
 
-  --ease-snappy: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --color-surface: oklch(0.16 0 0);               /* card base */
+  --color-surface-2: oklch(0.20 0 0);             /* raised surface */
+  --color-muted: oklch(0.22 0 0);                 /* bars/fills */
+  --color-border: oklch(0.28 0 0);                /* hairline borders */
 
-  /* Fonts wired from next/font vars */
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-muted-foreground: oklch(0.70 0 0);
 
-  /* Glow palette */
-  --glow-blue: 215 100% 70%;
-  --glow-purple: 280 100% 72%;
-  --glow-green: 152 76% 45%;
-  --glow-amber: 38 92% 50%;
-  --glow-red: 0 84% 60%;
-}
+  /* Accents */
+  --color-primary: oklch(0.72 0.18 275);          /* violet/indigo */
+  --color-primary-foreground: oklch(0.98 0 0);
 
-html,
-body {
-  height: 100%;
+  --color-success: oklch(0.72 0.17 152);
+  --color-warning: oklch(0.78 0.17 80);
+  --color-danger: oklch(0.67 0.22 25);
+
+  /* Typography */
+  --font-sans: var(--font-inter);
+
+  /* Radius */
+  --radius-sm: 0.75rem;
+  --radius-md: 1rem;
+  --radius-lg: 1.25rem;
+  --radius-xl: 1.5rem;
 }
 
-html {
-  background: hsl(var(--color-background));
-  color: hsl(var(--color-foreground));
+:root {
+  --ease-snappy: cubic-bezier(0.2, 0.9, 0.2, 1);
 }
 
-body {
-  font-family: var(--font-sans), ui-sans-serif, system-ui, -apple-system, "Segoe UI",
-    Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+@layer base {
+  html {
+    color-scheme: dark;
+  }
 
-  position: relative;
-  min-height: 100%;
-  background-color: hsl(var(--color-background));
-  color: hsl(var(--color-foreground));
+  body {
+    background: var(--color-background);
+  }
 
-  /* Pure black base with low-opacity cinematic glows */
-  background-image:
-    radial-gradient(1200px 700px at 50% -10%, hsl(var(--color-surface) / 0.8), transparent 60%),
-    radial-gradient(900px 600px at 10% 20%, hsl(var(--glow-blue) / 0.10), transparent 55%),
-    radial-gradient(900px 600px at 90% 25%, hsl(var(--glow-purple) / 0.08), transparent 55%),
-    radial-gradient(900px 600px at 50% 100%, hsl(var(--glow-blue) / 0.06), transparent 60%);
-  background-attachment: fixed;
-}
+  /* Global multi-glow backdrop (BrainLoom-style) */
+  body::before {
+    content: "";
+    position: fixed;
+    inset: -20%;
+    z-index: -2;
+    pointer-events: none;
 
-/* Deep black vignette */
-body::after {
-  content: "";
-  pointer-events: none;
-  position: fixed;
-  inset: 0;
-  z-index: 0;
-  background: radial-gradient(
-    80% 60% at 50% 30%,
-    transparent 0%,
-    rgba(0, 0, 0, 0.45) 65%,
-    rgba(0, 0, 0, 0.85) 100%
-  );
-}
+    background:
+      radial-gradient(900px 600px at 50% -8%, rgba(124, 58, 237, 0.32), transparent 62%),
+      radial-gradient(780px 520px at 12% 30%, rgba(59, 130, 246, 0.16), transparent 60%),
+      radial-gradient(820px 560px at 88% 36%, rgba(34, 197, 94, 0.12), transparent 62%),
+      radial-gradient(980px 700px at 70% 110%, rgba(244, 63, 94, 0.10), transparent 64%);
+    transform: translateZ(0);
+  }
 
-/* Keep content above vignette */
-body > * {
-  position: relative;
-  z-index: 1;
-}
+  /* Subtle grain (no asset needed) */
+  body::after {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    opacity: 0.06;
+    mix-blend-mode: overlay;
 
-::selection {
-  background: hsl(var(--glow-blue) / 0.25);
-}
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.75' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='240' height='240' filter='url(%23n)' opacity='.45'/%3E%3C/svg%3E");
+    background-size: 240px 240px;
+  }
 
-/* Section glow helper */
-.section-glow {
-  position: relative;
-}
-.section-glow::before {
-  content: "";
-  position: absolute;
-  inset: -1px;
-  pointer-events: none;
-  z-index: 0;
-  opacity: 0.85;
-  filter: blur(40px);
-  transform: translateZ(0);
-  background: radial-gradient(600px 320px at 30% 20%, hsl(var(--glow-blue) / 0.18), transparent 65%);
-}
-.section-glow > * {
-  position: relative;
-  z-index: 1;
-}
-.section-glow[data-glow="blue"]::before {
-  background: radial-gradient(600px 320px at 30% 20%, hsl(var(--glow-blue) / 0.18), transparent 65%);
-}
-.section-glow[data-glow="purple"]::before {
-  background: radial-gradient(600px 320px at 30% 20%, hsl(var(--glow-purple) / 0.16), transparent 65%);
-}
-.section-glow[data-glow="green"]::before {
-  background: radial-gradient(600px 320px at 30% 20%, hsl(var(--glow-green) / 0.14), transparent 65%);
-}
-.section-glow[data-glow="amber"]::before {
-  background: radial-gradient(600px 320px at 30% 20%, hsl(var(--glow-amber) / 0.12), transparent 65%);
-}
-.section-glow[data-glow="red"]::before {
-  background: radial-gradient(600px 320px at 30% 20%, hsl(var(--glow-red) / 0.12), transparent 65%);
+  * {
+    border-color: color-mix(in oklab, var(--color-border) 80%, transparent);
+  }
+
+  ::selection {
+    background: color-mix(in oklab, var(--color-primary) 45%, transparent);
+  }
 }
 
-/* Card hover glow */
-.glow-card {
-  position: relative;
-}
-.glow-card::before {
-  content: "";
-  position: absolute;
-  inset: -1px;
-  border-radius: inherit;
-  pointer-events: none;
-  background: radial-gradient(500px 280px at var(--mx, 50%) var(--my, 50%), hsl(var(--glow-blue) / 0.20), transparent 60%);
-  filter: blur(26px);
-  opacity: 0;
-  transition: opacity 180ms var(--ease-snappy);
-}
-.glow-card:hover::before {
-  opacity: 1;
-}
+/* Premium hover glow system (used by GlowCard) */
+@layer utilities {
+  .glow-card {
+    --glow-x: 50%;
+    --glow-y: 50%;
+    --glow-opacity: 0;
+    --glow-rgb: 124 58 237; /* default violet */
 
-/* Scrollbar */
-* {
-  scrollbar-width: thin;
-  scrollbar-color: hsl(var(--color-border)) transparent;
-}
-*::-webkit-scrollbar {
-  width: 10px;
-  height: 10px;
-}
-*::-webkit-scrollbar-thumb {
-  background-color: hsl(var(--color-border));
-  border-radius: 999px;
-  border: 2px solid transparent;
-  background-clip: content-box;
+    position: relative;
+    overflow: hidden;
+    isolation: isolate;
+  }
+
+  .glow-card::before {
+    content: "";
+    position: absolute;
+    inset: -1px;
+    pointer-events: none;
+    z-index: 0;
+    opacity: var(--glow-opacity);
+    transition: opacity 220ms var(--ease-snappy);
+
+    background:
+      radial-gradient(
+        600px circle at var(--glow-x) var(--glow-y),
+        rgba(var(--glow-rgb) / 0.35),
+        transparent 60%
+      );
+  }
+
+  .glow-card > * {
+    position: relative;
+    z-index: 1;
+  }
 }

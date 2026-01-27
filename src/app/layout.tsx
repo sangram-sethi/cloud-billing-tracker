@@ -1,37 +1,22 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Inter } from "next/font/google";
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const inter = Inter({
   subsets: ["latin"],
+  display: "swap",
+  variable: "--font-inter",
 });
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
-
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
 
 export const metadata: Metadata = {
-  title: {
-    default: "Cloud Budget Guard",
-    template: "%s · Cloud Budget Guard",
-  },
-  description:
-    "AWS-only anomaly alerts and weekly founder reports to prevent surprise cloud bills.",
-  metadataBase: new URL(siteUrl),
+  title: "CloudBudgetGuard",
+  description: "Track AWS spend, detect anomalies, and stay under budget.",
 };
 
-export default function RootLayout({
-  children,
-}: Readonly<{ children: React.ReactNode }>) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className="h-full scroll-smooth">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} h-full bg-background text-foreground antialiased`}
-      >
+    <html lang="en" className={`dark ${inter.variable}`}>
+      <body className="min-h-dvh font-sans text-foreground antialiased">
         {children}
       </body>
     </html>
