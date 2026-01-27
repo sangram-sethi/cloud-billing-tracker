@@ -2,62 +2,58 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { cn } from "@/lib/cn";
 import { LayoutDashboard, Plug, FileText, Settings } from "lucide-react";
 
-function cn(...classes: Array<string | undefined | false>) {
-  return classes.filter(Boolean).join(" ");
-}
-
-type NavItem = {
-  label: string;
-  href: string;
-  exact?: boolean;
-  icon: React.ComponentType<{ className?: string }>;
-};
-
-const items: NavItem[] = [
-  { label: "Dashboard", href: "/app", exact: true, icon: LayoutDashboard },
-  { label: "Connect AWS", href: "/app/connect-aws", icon: Plug },
-  { label: "Reports", href: "/app/reports", icon: FileText },
-  { label: "Settings", href: "/app/settings", icon: Settings },
+const links = [
+  { href: "/app", label: "Dashboard", icon: LayoutDashboard },
+  { href: "/app/connect-aws", label: "Connect AWS", icon: Plug },
+  { href: "/app/reports", label: "Reports", icon: FileText },
+  { href: "/app/settings", label: "Settings", icon: Settings },
 ];
 
-export default function AppSidebarNav() {
+export function AppSidebarNav() {
   const pathname = usePathname();
 
   return (
-    <nav className="flex flex-col gap-1">
-      {items.map((item) => {
-        const isActive = item.exact
-          ? pathname === item.href
-          : pathname === item.href || pathname.startsWith(item.href + "/");
+    <aside className="sticky top-0 z-40 border-b border-white/5 bg-background/40 backdrop-blur">
+      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
+        <div className="flex items-center gap-3">
+          <div className="grid h-9 w-9 place-items-center rounded-xl border border-white/10 bg-surface/50">
+            <span className="text-sm font-black tracking-tight">cb</span>
+          </div>
+          <p className="text-sm font-semibold tracking-tight">CloudBudgetGuard</p>
+        </div>
 
-        const Icon = item.icon;
+        <nav className="hidden items-center gap-2 md:flex">
+          {links.map((l) => {
+            const active = pathname === l.href || pathname.startsWith(l.href + "/");
+            return (
+              <Link
+                key={l.href}
+                href={l.href}
+                className={cn(
+                  "group relative inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium " +
+                    "transition-colors ease-(--ease-snappy)",
+                  active
+                    ? "bg-surface/60 text-foreground border border-white/10"
+                    : "text-muted-foreground hover:text-foreground hover:bg-surface/40"
+                )}
+              >
+                <l.icon className="h-4 w-4 opacity-80 group-hover:opacity-100" />
+                {l.label}
+              </Link>
+            );
+          })}
+        </nav>
 
-        return (
-          <Link
-            key={item.href}
-            href={item.href}
-            aria-current={isActive ? "page" : undefined}
-            className={cn(
-              "group relative flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-medium transition",
-              isActive
-                ? "bg-surface-2 text-foreground"
-                : "text-muted-foreground hover:bg-surface-2 hover:text-foreground"
-            )}
-          >
-            {/* Left indicator */}
-            <span
-              className={cn(
-                "absolute left-0 top-2 bottom-2 w-0.75 rounded-full transition-opacity",
-                isActive ? "bg-primary opacity-100" : "bg-primary opacity-0 group-hover:opacity-40"
-              )}
-            />
-            <Icon className="h-4 w-4 shrink-0 opacity-80" />
-            <span className="pl-1">{item.label}</span>
-          </Link>
-        );
-      })}
-    </nav>
+        <Link
+          href="/"
+          className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors ease-(--ease-snappy)"
+        >
+          Back to site
+        </Link>
+      </div>
+    </aside>
   );
 }

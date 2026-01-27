@@ -33,16 +33,13 @@ export default function ConnectAwsPage() {
     e.preventDefault();
     setSaved(false);
     setSaving(true);
-
     await new Promise((r) => setTimeout(r, 700));
-
     setSaving(false);
     setSaved(true);
   }
 
   return (
     <div className="space-y-6">
-      {/* Header */}
       <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight text-foreground">Connect AWS</h1>
@@ -53,14 +50,13 @@ export default function ConnectAwsPage() {
 
         <Link
           href="/security"
-          className="text-sm font-semibold text-muted-foreground hover:text-foreground transition"
+          className="text-sm font-semibold text-muted-foreground hover:text-foreground transition-colors ease-(--ease-snappy)"
         >
           View security details →
         </Link>
       </div>
 
       <div className="grid gap-4 lg:grid-cols-3">
-        {/* Setup checklist */}
         <Card>
           <CardHeader>
             <div className="flex items-center justify-between">
@@ -74,44 +70,24 @@ export default function ConnectAwsPage() {
 
           <CardContent>
             <ol className="space-y-4 text-sm">
-              <li className="flex gap-3">
-                <span className="mt-0.5 inline-flex h-6 w-6 items-center justify-center rounded-full bg-foreground text-xs font-semibold text-background">
-                  1
-                </span>
-                <div>
-                  <p className="font-semibold text-foreground">Create IAM role</p>
-                  <p className="mt-1 text-muted-foreground">
-                    We’ll provide CloudFormation + least-privilege policy.
-                  </p>
-                </div>
-              </li>
-
-              <li className="flex gap-3">
-                <span className="mt-0.5 inline-flex h-6 w-6 items-center justify-center rounded-full bg-foreground text-xs font-semibold text-background">
-                  2
-                </span>
-                <div>
-                  <p className="font-semibold text-foreground">Set External ID</p>
-                  <p className="mt-1 text-muted-foreground">
-                    Prevents confused-deputy issues. Keep it secret.
-                  </p>
-                </div>
-              </li>
-
-              <li className="flex gap-3">
-                <span className="mt-0.5 inline-flex h-6 w-6 items-center justify-center rounded-full bg-foreground text-xs font-semibold text-background">
-                  3
-                </span>
-                <div>
-                  <p className="font-semibold text-foreground">Paste details here</p>
-                  <p className="mt-1 text-muted-foreground">
-                    We’ll validate + test connection once backend is wired.
-                  </p>
-                </div>
-              </li>
+              {[
+                ["Create IAM role", "We’ll provide CloudFormation + least-privilege policy."],
+                ["Set External ID", "Prevents confused-deputy issues. Keep it secret."],
+                ["Paste details here", "We’ll validate + test connection once backend is wired."],
+              ].map(([title, desc], idx) => (
+                <li key={title} className="flex gap-3">
+                  <span className="mt-0.5 inline-flex h-6 w-6 items-center justify-center rounded-full bg-foreground text-xs font-semibold text-background">
+                    {idx + 1}
+                  </span>
+                  <div>
+                    <p className="font-semibold text-foreground">{title}</p>
+                    <p className="mt-1 text-muted-foreground">{desc}</p>
+                  </div>
+                </li>
+              ))}
             </ol>
 
-            <div className="mt-5 rounded-xl border border-border bg-surface-2 p-4">
+            <div className="mt-5 rounded-2xl border border-white/10 bg-surface/30 p-4">
               <p className="text-xs font-semibold text-foreground">Permissions scope</p>
               <p className="mt-1 text-sm text-muted-foreground">
                 Billing & cost metadata only (read-only). No access keys required.
@@ -120,17 +96,14 @@ export default function ConnectAwsPage() {
           </CardContent>
         </Card>
 
-        {/* Form */}
         <Card className="lg:col-span-2">
           <CardHeader>
             <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
               <div>
                 <CardTitle>Connection details</CardTitle>
-                <CardDescription>
-                  Week 1 UI only. We’ll store securely and verify in Week 2.
-                </CardDescription>
+                <CardDescription>Week 1 UI only. We’ll store securely and verify in Week 2.</CardDescription>
               </div>
-              {saved ? <Badge variant="success">Saved</Badge> : <Badge variant="default">Not connected</Badge>}
+              {saved ? <Badge variant="success">Saved</Badge> : <Badge variant="neutral">Not connected</Badge>}
             </div>
           </CardHeader>
 
@@ -150,9 +123,7 @@ export default function ConnectAwsPage() {
                     Expected format: arn:aws:iam::123456789012:role/RoleName
                   </p>
                 ) : (
-                  <p className="text-xs text-muted-foreground">
-                    Read-only role in your AWS account. No access keys.
-                  </p>
+                  <p className="text-xs text-muted-foreground">Read-only role in your AWS account. No access keys.</p>
                 )}
               </div>
 
@@ -180,7 +151,12 @@ export default function ConnectAwsPage() {
                   id="region"
                   value={region}
                   onChange={(e) => setRegion(e.target.value)}
-                  className="h-10 w-full rounded-xl border border-border bg-surface px-3 text-sm text-foreground outline-none transition-[box-shadow,border-color] duration-200 ease-(--ease-snappy) focus-visible:ring-2 focus-visible:ring-primary/20"
+                  className={
+                    "h-11 w-full rounded-2xl border border-border/70 bg-surface/55 px-3 text-sm text-foreground " +
+                    "shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] backdrop-blur outline-none " +
+                    "transition-[box-shadow,border-color] duration-200 ease-(--ease-snappy) " +
+                    "focus-visible:ring-2 focus-visible:ring-primary/20 focus-visible:border-primary/40"
+                  }
                 >
                   <option value="ap-south-1">ap-south-1 (Mumbai)</option>
                   <option value="us-east-1">us-east-1 (N. Virginia)</option>
@@ -188,9 +164,7 @@ export default function ConnectAwsPage() {
                   <option value="eu-west-1">eu-west-1 (Ireland)</option>
                   <option value="ap-southeast-1">ap-southeast-1 (Singapore)</option>
                 </select>
-                <p className="text-xs text-muted-foreground">
-                  Helps default filters and reporting (mocked for now).
-                </p>
+                <p className="text-xs text-muted-foreground">Helps default filters and reporting (mocked for now).</p>
               </div>
 
               <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -199,37 +173,30 @@ export default function ConnectAwsPage() {
                 </Button>
 
                 {saved ? (
-                  <div className="rounded-xl border border-success/20 bg-success/10 px-3 py-2 text-sm font-medium text-success">
+                  <div className="rounded-2xl border border-success/20 bg-success/10 px-3 py-2 text-sm font-medium text-success">
                     Saved (mock). Backend validation comes in Week 2.
                   </div>
                 ) : (
-                  <div className="text-xs text-muted-foreground">
-                    Tip: We’ll provide a copy-paste CloudFormation template later.
-                  </div>
+                  <div className="text-xs text-muted-foreground">Tip: We’ll provide a copy-paste CloudFormation template later.</div>
                 )}
               </div>
             </form>
 
-            {/* Preview */}
-            <div className="mt-6 rounded-2xl border border-border bg-surface-2 p-5">
+            <div className="mt-6 rounded-3xl border border-white/10 bg-surface/30 p-5">
               <p className="text-xs font-semibold text-foreground">Connection preview (mock)</p>
 
               <div className="mt-3 grid gap-2 sm:grid-cols-2">
-                <div className="rounded-xl border border-border bg-surface p-3">
+                <div className="rounded-2xl border border-white/10 bg-surface/40 p-3">
                   <p className="text-xs text-muted-foreground">Role ARN</p>
-                  <p className="mt-1 break-all text-sm font-semibold text-foreground">
-                    {roleArn || "—"}
-                  </p>
+                  <p className="mt-1 break-all text-sm font-semibold text-foreground">{roleArn || "—"}</p>
                 </div>
 
-                <div className="rounded-xl border border-border bg-surface p-3">
+                <div className="rounded-2xl border border-white/10 bg-surface/40 p-3">
                   <p className="text-xs text-muted-foreground">External ID</p>
-                  <p className="mt-1 break-all text-sm font-semibold text-foreground">
-                    {externalId ? "••••••••••••••" : "—"}
-                  </p>
+                  <p className="mt-1 break-all text-sm font-semibold text-foreground">{externalId ? "••••••••••••••" : "—"}</p>
                 </div>
 
-                <div className="rounded-xl border border-border bg-surface p-3 sm:col-span-2">
+                <div className="rounded-2xl border border-white/10 bg-surface/40 p-3 sm:col-span-2">
                   <p className="text-xs text-muted-foreground">Region</p>
                   <p className="mt-1 text-sm font-semibold text-foreground">{region}</p>
                 </div>
