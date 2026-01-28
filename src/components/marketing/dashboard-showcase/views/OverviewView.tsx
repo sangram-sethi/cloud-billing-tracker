@@ -46,9 +46,9 @@ export function OverviewView({
   const scoreTone = toneForScore(score);
 
   return (
-    <div className="relative h-full min-h-0 overflow-hidden">
+    <div className="h-full min-h-0 overflow-hidden">
       <div className="hideScroll h-full min-h-0 overflow-y-auto pb-10 pr-1">
-        <div className="grid min-h-min min-w-0 grid-rows-[auto_1fr_1fr] gap-4">
+        <div className="grid min-h-min min-w-0 grid-rows-[auto_auto_auto] gap-4">
           {/* Metrics */}
           <div className="grid grid-cols-2 gap-4 xl:grid-cols-4">
             <MetricCard
@@ -181,7 +181,8 @@ export function OverviewView({
               <Badge variant="neutral">Founder-friendly</Badge>
             </div>
 
-            <div className="mt-4 min-h-0 overflow-auto rounded-2xl border border-white/10">
+            {/* ✅ Scroll box prevents overflow into frame */}
+            <div className="mt-4 max-h-60 xl:max-h-70 overflow-auto rounded-2xl border border-white/10">
               <div className="grid grid-cols-[140px_1fr_120px_120px_120px] bg-white/3 px-3 py-2 text-[11px] font-semibold text-muted-foreground">
                 <span>Time</span>
                 <span>Signal</span>

@@ -44,9 +44,9 @@ export function BudgetsView({
   const top = servicesFiltered.slice(0, 5);
 
   return (
-    <div className="relative h-full min-h-0 overflow-hidden">
+    <div className="h-full min-h-0 overflow-hidden">
       <div className="hideScroll h-full min-h-0 overflow-y-auto pb-10 pr-1">
-        <div className="grid min-h-0 grid-rows-[auto_1fr] gap-4">
+        <div className="grid min-h-min grid-rows-[auto_1fr] gap-4">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div className="flex items-center gap-2">
               <div className="grid h-9 w-9 place-items-center rounded-2xl border border-white/10 bg-white/5">
@@ -65,6 +65,7 @@ export function BudgetsView({
           </div>
 
           <div className="grid min-h-0 grid-cols-1 gap-4 xl:grid-cols-[1.05fr_0.95fr]">
+            {/* Left column */}
             <div className="min-h-0 overflow-auto rounded-2xl border border-white/10 bg-surface/30 p-4">
               <div className="flex items-start justify-between gap-3">
                 <div>
@@ -88,7 +89,11 @@ export function BudgetsView({
                   <span
                     className={cn(
                       "font-semibold",
-                      mtdTone === "danger" ? "text-rose-300" : mtdTone === "warning" ? "text-amber-300" : "text-emerald-300"
+                      mtdTone === "danger"
+                        ? "text-rose-300"
+                        : mtdTone === "warning"
+                        ? "text-amber-300"
+                        : "text-emerald-300"
                     )}
                   >
                     {fmtUsd0(mtd)} • {pct}%
@@ -159,6 +164,7 @@ export function BudgetsView({
               </div>
             </div>
 
+            {/* Right column */}
             <div className="min-h-0 overflow-auto rounded-2xl border border-white/10 bg-surface/30 p-4">
               <div className="flex items-start justify-between gap-3">
                 <div>
