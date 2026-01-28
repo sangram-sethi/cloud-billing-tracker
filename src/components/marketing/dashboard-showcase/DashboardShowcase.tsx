@@ -4,14 +4,7 @@ import * as React from "react";
 import { cn } from "@/lib/cn";
 import { Badge } from "@/components/ui/Badge";
 import { Input } from "@/components/ui/Input";
-import {
-  BellRing,
-  ChevronDown,
-  LineChart,
-  Search,
-  Shield,
-  SlidersHorizontal,
-} from "lucide-react";
+import { BellRing, ChevronDown, LineChart, Search, Shield, SlidersHorizontal } from "lucide-react";
 
 import type { PopoverKey, RangeKey, RegionKey, View, RangeData } from "./types";
 import { RANGE_DATA, RANGE_LABEL } from "./data";
@@ -24,7 +17,6 @@ import { AlertsView } from "./views/AlertsView";
 import { BudgetsView } from "./views/BudgetsView";
 import { ReportsView } from "./views/ReportsView";
 import { SettingsView } from "./views/SettingsView";
-
 
 export function DashboardShowcase({ className }: { className?: string }) {
   const rootRef = React.useRef<HTMLDivElement | null>(null);
@@ -90,9 +82,7 @@ export function DashboardShowcase({ className }: { className?: string }) {
       return s.name.toLowerCase().includes(qq);
     });
 
-  const anomaliesFiltered = base.anomalies.filter((a) =>
-    region === "all" ? true : a.r === region
-  );
+  const anomaliesFiltered = base.anomalies.filter((a) => (region === "all" ? true : a.r === region));
 
   const activeService =
     focusService ?? (servicesFiltered[0]?.name ?? base.services[0]?.name ?? "EC2");
@@ -132,7 +122,7 @@ export function DashboardShowcase({ className }: { className?: string }) {
         }}
       />
 
-      {/* ✅ Scrim: use a non-focusable DIV (fixes weird top highlight) */}
+      {/* Scrim */}
       {popover ? (
         <div
           aria-hidden
@@ -141,9 +131,9 @@ export function DashboardShowcase({ className }: { className?: string }) {
         />
       ) : null}
 
-      <div className="relative z-6 grid h-full w-full grid-cols-[220px_1fr]">
+      <div className="relative z-6 grid h-full min-h-0 w-full grid-cols-[220px_1fr]">
         {/* Sidebar */}
-        <aside className="flex h-full flex-col gap-4 border-r border-white/10 bg-surface/35 px-4 py-4">
+        <aside className="flex h-full min-h-0 flex-col gap-4 border-r border-white/10 bg-surface/35 px-4 py-4">
           <div className="flex items-center gap-2">
             <span className="grid h-9 w-9 place-items-center rounded-2xl bg-white/5 ring-1 ring-white/10">
               <LineChart className="h-5 w-5 text-primary" />
@@ -212,9 +202,9 @@ export function DashboardShowcase({ className }: { className?: string }) {
         </aside>
 
         {/* Main */}
-        <section className="flex h-full flex-col">
+        <section className="flex h-full min-h-0 flex-col">
           {/* Top bar */}
-          <div className="relative flex items-center gap-3 border-b border-white/10 bg-surface/25 px-4 py-3">
+          <div className="relative shrink-0 flex items-center gap-3 border-b border-white/10 bg-surface/25 px-4 py-3">
             <button type="button" className={pillClass(false)} onClick={() => setPopover(null)}>
               Acme Inc • Prod <ChevronDown className="h-3.5 w-3.5" />
             </button>
@@ -236,16 +226,11 @@ export function DashboardShowcase({ className }: { className?: string }) {
                 {RANGE_LABEL[range]}
               </button>
 
-              <button
-                type="button"
-                className={pillClass(isLive)}
-                onClick={() => setIsLive((v) => !v)}
-              >
+              <button type="button" className={pillClass(isLive)} onClick={() => setIsLive((v) => !v)}>
                 <span className={cn("h-2 w-2 rounded-full", isLive ? "bg-success animate-pulse" : "bg-white/20")} />
                 {isLive ? "Live" : "Paused"}
               </button>
 
-              {/* ✅ colored icons */}
               <IconButton
                 label="Alerts"
                 tone="violet"
@@ -275,55 +260,58 @@ export function DashboardShowcase({ className }: { className?: string }) {
             </div>
 
             {popover ? (
-              <Popovers
-                popover={popover}
-                onClose={() => setPopover(null)}
-                region={region}
-                setRegion={setRegion}
-              />
+              <Popovers popover={popover} onClose={() => setPopover(null)} region={region} setRegion={setRegion} />
             ) : null}
           </div>
-{/* Views */}
-<div className="min-h-0 flex-1 p-4">
-  {view === "overview" ? (
-    <OverviewView
-      range={range}
-      base={base}
-      region={region}
-      activeService={activeService}
-      hotRegion={hotRegion}
-      mtd={mtd}
-      today={today}
-      forecast={forecast}
-      score={score}
-      q={q}
-      servicesFiltered={servicesFiltered}
-      anomaliesFiltered={anomaliesFiltered}
-      focusService={focusService}
-      setFocusService={setFocusService}
-    />
-  ) : view === "alerts" ? (
-    <AlertsView range={range} base={base} anomaliesFiltered={anomaliesFiltered} />
-  ) : view === "budgets" ? (
-    <BudgetsView
-      range={range}
-      base={base}
-      mtd={mtd}
-      forecast={forecast}
-      servicesFiltered={servicesFiltered}
-    />
-  ) : view === "reports" ? (
-    <ReportsView range={range} base={base} mtd={mtd} forecast={forecast} />
-  ) : (
-    <SettingsView />
-  )}
-</div>
+
+          {/* ✅ Single scroll viewport for ALL views */}
+          <div className="min-h-0 flex-1 overflow-hidden p-4">
+            <div
+              className="hideScroll h-full min-h-0 overflow-y-auto overscroll-contain pr-1 pb-10"
+              style={{ WebkitOverflowScrolling: "touch" }}
+            >
+              {view === "overview" ? (
+                <OverviewView
+                  range={range}
+                  base={base}
+                  region={region}
+                  activeService={activeService}
+                  hotRegion={hotRegion}
+                  mtd={mtd}
+                  today={today}
+                  forecast={forecast}
+                  score={score}
+                  q={q}
+                  servicesFiltered={servicesFiltered}
+                  anomaliesFiltered={anomaliesFiltered}
+                  focusService={focusService}
+                  setFocusService={setFocusService}
+                />
+              ) : view === "alerts" ? (
+                <AlertsView range={range} base={base} anomaliesFiltered={anomaliesFiltered} />
+              ) : view === "budgets" ? (
+                <BudgetsView range={range} base={base} mtd={mtd} forecast={forecast} servicesFiltered={servicesFiltered} />
+              ) : view === "reports" ? (
+                <ReportsView range={range} base={base} mtd={mtd} forecast={forecast} />
+              ) : (
+                <SettingsView />
+              )}
+            </div>
+          </div>
         </section>
       </div>
 
       <style jsx>{`
         .pop-in {
           animation: popIn 170ms var(--ease-snappy) both;
+        }
+        .hideScroll::-webkit-scrollbar {
+          width: 0px;
+          height: 0px;
+        }
+        .hideScroll {
+          scrollbar-width: none;
+          -ms-overflow-style: none;
         }
         @keyframes popIn {
           from {
