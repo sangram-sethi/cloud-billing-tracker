@@ -1,7 +1,10 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { signIn } from "next-auth/react";
+
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
@@ -9,17 +12,52 @@ import { Label } from "@/components/ui/Label";
 import { Badge } from "@/components/ui/Badge";
 
 export default function SignupPage() {
+  const router = useRouter();
+
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
+    setError(null);
     setLoading(true);
-    await new Promise((r) => setTimeout(r, 700));
+
+    const res = await fetch("/api/auth/register", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        name: name.trim() || undefined,
+        email: email.trim().toLowerCase(),
+        password,
+      }),
+    }).catch(() => null);
+
+    if (!res || !res.ok) {
+      const data = await res?.json().catch(() => null);
+      setLoading(false);
+      setError(data?.message || "Could not create account");
+      return;
+    }
+
+    const signInRes = await signIn("credentials", {
+      email: email.trim().toLowerCase(),
+      password,
+      redirect: false,
+    });
+
     setLoading(false);
-    alert("Mock signup. Auth + onboarding wiring in Week 2.");
+
+    if (signInRes?.error) {
+      setError("Account created, but sign in failed. Please try logging in.");
+      return;
+    }
+
+    router.push("/app");
+    router.refresh();
   }
 
   const canSubmit =
@@ -32,14 +70,21 @@ export default function SignupPage() {
           <div className="flex items-start justify-between gap-4">
             <div>
               <CardTitle>Create your account</CardTitle>
-              <CardDescription>Week 1 UI only. Real signup + org setup comes next.</CardDescription>
+              <CardDescription>Start tracking AWS spend in minutes.</CardDescription>
             </div>
-            <Badge variant="neutral">MVP</Badge>
+            <Badge variant="neutral">Auth</Badge>
           </div>
         </CardHeader>
 
         <CardContent>
           <form onSubmit={onSubmit} className="space-y-4">
+            {error ? (
+              <div className="rounded-xl border border-border bg-surface-2 p-3">
+                <p className="text-sm font-semibold text-foreground">Couldn’t create your account</p>
+                <p className="mt-1 text-sm text-muted-foreground">{error}</p>
+              </div>
+            ) : null}
+
             <div className="space-y-2">
               <Label htmlFor="name">Name</Label>
               <Input
@@ -73,9 +118,7 @@ export default function SignupPage() {
                 placeholder="Minimum 8 characters"
                 autoComplete="new-password"
               />
-              <p className="text-xs text-muted-foreground">
-                Use at least 8 characters. Auth rules will be enforced in Week 2.
-              </p>
+              <p className="text-xs text-muted-foreground">Use at least 8 characters.</p>
             </div>
 
             <Button type="submit" variant="primary" size="md" disabled={!canSubmit} className="w-full">
@@ -88,15 +131,6 @@ export default function SignupPage() {
             <Link href="/login" className="font-semibold text-foreground hover:underline">
               Sign in
             </Link>
-          </div>
-
-          <div className="mt-6 rounded-xl border border-border bg-surface-2 p-4">
-            <p className="text-xs font-semibold text-foreground">Next steps (Week 2)</p>
-            <ul className="mt-2 space-y-1 text-xs text-muted-foreground">
-              <li>• Create workspace/org</li>
-              <li>• Generate External ID automatically</li>
-              <li>• Connect AWS + validate permissions</li>
-            </ul>
           </div>
         </CardContent>
       </Card>

@@ -2,12 +2,13 @@
 
 Prevent cloud bill surprises with anomaly alerts + a weekly founder report.
 
-**Status:** Week 1 = UI + design system + mocked data (no backend yet).  
+**Status:** Week 1 UI + premium design system + mocked data.  
+**Now added:** MongoDB-backed auth foundation (real signup/login + protected app routes).  
 **MVP scope:** AWS-only.
 
 ---
 
-## What’s built (Week 1)
+## What’s built so far
 
 - Marketing site:
   - Landing (`/`)
@@ -17,16 +18,11 @@ Prevent cloud bill surprises with anomaly alerts + a weekly founder report.
   - Dashboard UI with mocked data (`/app`)
   - Connect AWS flow UI (`/app/connect-aws`) — Role ARN + External ID
   - Reports placeholder (`/app/reports`)
-  - Settings placeholder (`/app/settings`)
-- Auth routes (minimal layout):
-  - Login (`/login`)
-  - Signup (`/signup`)
-- UI system:
-  - Tailwind v4 tokens in `globals.css` (`@theme`)
-  - Card / Button / Input / Label / Badge primitives
-  - Premium hover glow + cursor-following glow
-  - Page transitions (Framer Motion)
-  - Icons (lucide-react)
+  - Settings (`/app/settings`) — shows account + sign out
+- Auth (real)
+  - Signup (`/signup`) → creates Mongo user with hashed password
+  - Login (`/login`) → credentials auth via NextAuth v5 (JWT session)
+  - `/app/*` protected (redirects to `/login`)
 
 ---
 
@@ -35,9 +31,9 @@ Prevent cloud bill surprises with anomaly alerts + a weekly founder report.
 - Next.js (App Router)
 - React + TypeScript
 - Tailwind CSS v4
-- Framer Motion (page transitions)
-- lucide-react (icons)
-- Package manager: `pnpm`
+- Framer Motion
+- Auth.js / NextAuth v5 (Credentials)
+- MongoDB Atlas (no local DB required)
 
 ---
 
