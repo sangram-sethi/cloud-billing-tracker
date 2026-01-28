@@ -26,6 +26,9 @@ export function MarketingFooter() {
                 <Link className="hover:text-foreground transition-colors" href="/">
                   Workflow
                 </Link>
+                <Link className="hover:text-foreground transition-colors" href="/docs">
+                  Docs
+                </Link>
                 <Link className="hover:text-foreground transition-colors" href="/pricing">
                   Pricing
                 </Link>
@@ -38,27 +41,24 @@ export function MarketingFooter() {
             <div className="space-y-2">
               <p className="text-sm font-semibold text-foreground">Company</p>
               <div className="grid gap-2 text-sm text-muted-foreground">
-                <a className="hover:text-foreground transition-colors" href="#docs">
-                  Docs
-                </a>
-                <a className="hover:text-foreground transition-colors" href="#privacy">
+                <Link className="hover:text-foreground transition-colors" href="/privacy">
                   Privacy
-                </a>
-                <a className="hover:text-foreground transition-colors" href="#terms">
+                </Link>
+                <Link className="hover:text-foreground transition-colors" href="/terms">
                   Terms
-                </a>
+                </Link>
+                <Link className="hover:text-foreground transition-colors" href="/login">
+                  Sign in
+                </Link>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Massive watermark-style text (like reference footer vibe) */}
+        {/* Massive watermark-style text */}
         <div className="relative mt-14 overflow-hidden rounded-3xl border border-white/5 bg-surface/20 p-10">
           <p className="text-xs text-muted-foreground">Built for founders who hate surprise bills.</p>
-          <div
-            aria-hidden
-            className="pointer-events-none absolute inset-0 flex items-end justify-center"
-          >
+          <div aria-hidden className="pointer-events-none absolute inset-0 flex items-end justify-center">
             <span className="select-none text-[10rem] font-black tracking-tight text-white/3 leading-none">
               CLOUDBUDGET
             </span>
