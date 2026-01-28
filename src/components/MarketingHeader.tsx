@@ -20,7 +20,7 @@ export function MarketingHeader() {
         </Link>
 
         {/* Nav */}
-        <nav className="hidden items-center gap-8 md:flex">
+        <nav className="hidden items-center gap-1 rounded-full border border-white/10 bg-white/4 p-1 md:flex">
           <NavLink href="/" exact>
             Workflow
           </NavLink>
