@@ -1,111 +1,253 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { signIn } from "next-auth/react";
 
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/Card";
+import { AuthShell } from "@/components/auth/AuthShell";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Label } from "@/components/ui/Label";
-import { Badge } from "@/components/ui/Badge";
+import { TurnstileWidget, type TurnstileHandle } from "@/components/auth/TurnstileWidget";
+import { signInWithLoginToken } from "@/lib/auth/signInWithLoginToken";
 
 export default function LoginPage() {
-  const router = useRouter();
-  const searchParams = useSearchParams();
+  const siteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
+  const turnstileRef = useRef<TurnstileHandle | null>(null);
 
+  const [step, setStep] = useState<"details" | "otp">("details");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
+
+  const [challengeId, setChallengeId] = useState<string | null>(null);
+  const [code, setCode] = useState("");
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  async function onSubmit(e: React.FormEvent) {
+  async function requestOtp(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
-    setLoading(true);
 
-    const callbackUrl = searchParams.get("callbackUrl") || "/app";
-
-    const res = await signIn("credentials", {
-      email: email.trim().toLowerCase(),
-      password,
-      redirect: false,
-    });
-
-    setLoading(false);
-
-    if (res?.error) {
-      setError("Invalid email or password");
+    if (!siteKey) {
+      setError("Missing NEXT_PUBLIC_TURNSTILE_SITE_KEY");
+      return;
+    }
+    if (!captchaToken) {
+      setError("Please complete the captcha first.");
       return;
     }
 
-    router.push(callbackUrl);
-    router.refresh();
+    setLoading(true);
+    try {
+      const res = await fetch("/api/auth/otp/request", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "login",
+          email: email.trim(),
+          password,
+          turnstileToken: captchaToken,
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data?.error || "Failed to send code");
+
+      // Token is single-use; reset after request
+      setCaptchaToken(null);
+      turnstileRef.current?.reset();
+
+      setChallengeId(data.challengeId);
+      setStep("otp");
+    } catch (err: any) {
+      setError(err?.message || "Something went wrong");
+      setCaptchaToken(null);
+      turnstileRef.current?.reset();
+    } finally {
+      setLoading(false);
+    }
   }
 
-  const canSubmit = email.trim().length > 3 && password.length >= 8 && !loading;
+  async function verifyOtp(e: React.FormEvent) {
+    e.preventDefault();
+    setError(null);
+
+    if (!challengeId) {
+      setError("Challenge missing. Please request a new code.");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const res = await fetch("/api/auth/otp/verify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: email.trim(),
+          challengeId,
+          code: code.trim(),
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data?.error || "Invalid code");
+      if (!data?.loginToken) throw new Error("Login token missing. Please retry.");
+
+      await signInWithLoginToken(data.loginToken, "/app");
+    } catch (err: any) {
+      setError(err?.message || "Something went wrong");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function google() {
+    setError(null);
+    setLoading(true);
+    try {
+      await signIn("google", { callbackUrl: "/app" });
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  const canRequest =
+    email.trim().length > 3 && password.length >= 6 && !!captchaToken && !loading;
+
+  const canVerify = code.trim().length === 6 && !loading;
 
   return (
-    <div className="mx-auto max-w-md">
-      <Card>
-        <CardHeader>
-          <div className="flex items-start justify-between gap-4">
-            <div>
-              <CardTitle>Sign in</CardTitle>
-              <CardDescription>Welcome back. Let’s get you into the dashboard.</CardDescription>
-            </div>
-            <Badge variant="neutral">Auth</Badge>
+    <AuthShell title="Sign in" description="Google or email + password + OTP verification.">
+      <Button
+        type="button"
+        variant="secondary"
+        size="md"
+        className="w-full"
+        onClick={google}
+        disabled={loading}
+      >
+        Continue with Google
+      </Button>
+
+      <div className="mt-3 flex items-center gap-3">
+        <div className="h-px flex-1 bg-white/10" />
+        <span className="text-xs text-muted-foreground">or</span>
+        <div className="h-px flex-1 bg-white/10" />
+      </div>
+
+      {error ? (
+        <div className="mt-4 rounded-2xl border border-danger/30 bg-danger/10 p-3 text-sm text-foreground">
+          {error}
+        </div>
+      ) : null}
+
+      {step === "details" ? (
+        <form onSubmit={requestOtp} className="mt-5 space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="email">Email</Label>
+            <Input
+              id="email"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="you@company.com"
+              autoComplete="email"
+            />
           </div>
-        </CardHeader>
 
-        <CardContent>
-          <form onSubmit={onSubmit} className="space-y-4">
-            {error ? (
-              <div className="rounded-xl border border-border bg-surface-2 p-3">
-                <p className="text-sm font-semibold text-foreground">Couldn’t sign you in</p>
-                <p className="mt-1 text-sm text-muted-foreground">{error}</p>
-              </div>
-            ) : null}
-
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="you@company.com"
-                autoComplete="email"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
-              <Input
-                id="password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••"
-                autoComplete="current-password"
-              />
-            </div>
-
-            <Button type="submit" variant="primary" size="md" disabled={!canSubmit} className="w-full">
-              {loading ? "Signing in..." : "Sign in"}
-            </Button>
-          </form>
-
-          <div className="mt-5 flex items-center justify-between text-sm">
-            <Link href="/signup" className="font-semibold text-muted-foreground hover:text-foreground transition">
-              Create account
-            </Link>
-            <span className="text-muted-foreground">Forgot password? (soon)</span>
+          <div className="space-y-2">
+            <Label htmlFor="password">Password</Label>
+            <Input
+              id="password"
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="••••••••"
+              autoComplete="current-password"
+            />
           </div>
-        </CardContent>
-      </Card>
-    </div>
+
+          <Button
+            type="submit"
+            variant="primary"
+            size="md"
+            disabled={!canRequest}
+            className="w-full"
+          >
+            {loading ? "Sending code..." : "Send OTP"}
+          </Button>
+
+          {/* ✅ Captcha below Send OTP */}
+          {siteKey ? (
+            <TurnstileWidget
+              ref={turnstileRef}
+              siteKey={siteKey}
+              size="normal"
+              onToken={(t) => setCaptchaToken(t)}
+              onExpired={() => setCaptchaToken(null)}
+              onError={() => setCaptchaToken(null)}
+            />
+          ) : null}
+
+          <div className="text-xs text-muted-foreground">
+            Complete captcha to enable OTP.
+          </div>
+
+          <button
+            type="button"
+            className="w-full text-center text-sm text-muted-foreground hover:text-foreground transition"
+            onClick={() => alert("Password reset flow later.")}
+            disabled={loading}
+          >
+            Forgot password?
+          </button>
+        </form>
+      ) : (
+        <form onSubmit={verifyOtp} className="mt-5 space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="otp">Enter OTP</Label>
+            <Input
+              id="otp"
+              inputMode="numeric"
+              value={code}
+              onChange={(e) => setCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
+              placeholder="6-digit code"
+              autoComplete="one-time-code"
+            />
+          </div>
+
+          <Button type="submit" variant="primary" size="md" disabled={!canVerify} className="w-full">
+            {loading ? "Verifying..." : "Verify & sign in"}
+          </Button>
+
+          <button
+            type="button"
+            className="w-full text-center text-sm text-muted-foreground hover:text-foreground transition"
+            onClick={() => {
+              setStep("details");
+              setCode("");
+              setChallengeId(null);
+              setCaptchaToken(null);
+              turnstileRef.current?.reset();
+            }}
+            disabled={loading}
+          >
+            Back / resend
+          </button>
+        </form>
+      )}
+
+      <div className="mt-6 flex items-center justify-between text-sm">
+        <Link href="/signup" className="font-semibold text-muted-foreground hover:text-foreground transition">
+          Create account
+        </Link>
+        <Link href="/" className="text-muted-foreground hover:text-foreground transition">
+          Back to site
+        </Link>
+      </div>
+    </AuthShell>
   );
 }

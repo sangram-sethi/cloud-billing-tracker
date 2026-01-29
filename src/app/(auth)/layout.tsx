@@ -9,8 +9,9 @@ export default async function AuthLayout({ children }: { children: React.ReactNo
   return (
     <div className="min-h-dvh">
       <Container className="py-16">
-        <div className="mx-auto max-w-md">{children}</div>
+        {children}
       </Container>
     </div>
   );
 }
+

@@ -1,11 +1,10 @@
 import bcrypt from "bcryptjs";
 
-const BCRYPT_COST = 12;
-
-export async function hashPassword(plain: string): Promise<string> {
-  return bcrypt.hash(plain, BCRYPT_COST);
+export async function hashPassword(password: string) {
+  const salt = await bcrypt.genSalt(12);
+  return bcrypt.hash(password, salt);
 }
 
-export async function verifyPassword(plain: string, hash: string): Promise<boolean> {
-  return bcrypt.compare(plain, hash);
+export async function verifyPassword(password: string, hash: string) {
+  return bcrypt.compare(password, hash);
 }
