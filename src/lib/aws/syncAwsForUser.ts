@@ -5,6 +5,7 @@ import { awsConnectionsCol, costDailyCol, anomaliesCol } from "@/lib/aws/collect
 import { decryptCredential } from "@/lib/aws/crypto";
 import { pullDailyCostsLastNDays } from "@/lib/aws/pullDailyCosts";
 import { computeTotalAnomalies, computeServiceAnomalies, type DailyPoint } from "@/lib/aws/anomalyEngine";
+import { sendAnomalyEmailAlerts } from "@/lib/notifications/sendAnomalyEmailAlerts";
 
 export type SyncAwsOk = {
   ok: true;
@@ -214,6 +215,29 @@ export async function syncAwsForUser(params: { userId: ObjectId; days: number })
 
   if (aOps.length > 0) {
     await aCol.bulkWrite(aOps, { ordered: false });
+  }
+
+  // ✅ Step 8: Send anomaly emails (deduped, non-blocking)
+  // Default threshold: warning+ (you can add UI preferences later)
+  try {
+    await sendAnomalyEmailAlerts({
+      userId,
+      anomalies: anomalies.map((a) => ({
+        date: a.date,
+        service: a.service,
+        severity: a.severity,
+        message: a.message,
+        observed: a.observed,
+        baseline: a.baseline,
+        pctChange: a.pctChange,
+        zScore: a.zScore,
+        status: "open",
+      })),
+      currency,
+      minSeverity: "warning",
+    });
+  } catch {
+    // never crash sync
   }
 
   // 5) Mark sync success
