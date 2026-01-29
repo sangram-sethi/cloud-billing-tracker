@@ -1,4 +1,4 @@
-export type TotalDailyPoint = {
+export type DailyPoint = {
   /** YYYY-MM-DD (UTC) */
   date: string;
   amount: number;
@@ -7,7 +7,7 @@ export type TotalDailyPoint = {
 
 export type AnomalyOut = {
   date: string;
-  service: "__TOTAL__";
+  service: string; // "__TOTAL__" or service name
   observed: number;
   baseline: number;
   pctChange: number; // ratio: 0.82 => +82%
@@ -18,9 +18,15 @@ export type AnomalyOut = {
 
 const WINDOW = 7;
 
-// Noise guards (premium default): avoids tiny $0.10 → $0.20 “anomalies”
-const MIN_OBSERVED = 1; // $1
-const MIN_ABS_DELTA = 1; // $1
+// TOTAL thresholds
+const TOTAL_MIN_OBSERVED = 1; // $1
+const TOTAL_MIN_ABS_DELTA = 1; // $1
+
+// SERVICE thresholds (more strict to avoid noise)
+const SERVICE_MIN_OBSERVED = 2; // $2
+const SERVICE_MIN_ABS_DELTA = 2; // $2
+const SERVICE_MIN_BASELINE = 1; // if baseline < $1, we only flag big “new spend”
+const SERVICE_MIN_OBSERVED_IF_BASELINE_TINY = 8; // $8 spike even if baseline ~0
 
 function mean(xs: number[]) {
   if (xs.length === 0) return 0;
@@ -39,7 +45,7 @@ function stddev(xs: number[], mu: number) {
   return Math.sqrt(s2 / (xs.length - 1));
 }
 
-function fmtUSD(n: number) {
+function fmtMoneyUSD(n: number) {
   if (!Number.isFinite(n)) return "$0.00";
   return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 2 }).format(n);
 }
@@ -53,14 +59,19 @@ function severityFor(pct: number): "info" | "warning" | "critical" | null {
   return null;
 }
 
-/**
- * Compute anomalies from total daily costs.
- * - Uses 7-day rolling mean baseline.
- * - Uses % jump and optional z-score (if stddev>0).
- * - Only flags upward spikes (pctChange > 0).
- */
-export function computeTotalAnomalies(points: TotalDailyPoint[]): AnomalyOut[] {
-  const sorted = [...points].sort((a, b) => a.date.localeCompare(b.date));
+function computeSeriesAnomalies(opts: {
+  points: DailyPoint[];
+  service: string;
+  currency: string;
+  thresholds: {
+    minObserved: number;
+    minAbsDelta: number;
+    minBaseline: number;
+    minObservedIfBaselineTiny: number;
+  };
+}): AnomalyOut[] {
+  const { service, currency, thresholds } = opts;
+  const sorted = [...opts.points].sort((a, b) => a.date.localeCompare(b.date));
   const out: AnomalyOut[] = [];
 
   for (let i = WINDOW; i < sorted.length; i++) {
@@ -70,12 +81,14 @@ export function computeTotalAnomalies(points: TotalDailyPoint[]): AnomalyOut[] {
 
     const observed = sorted[i].amount;
     const baseline = mu;
-
     const delta = observed - baseline;
-    if (observed < MIN_OBSERVED) continue;
-    if (delta < MIN_ABS_DELTA) continue;
 
-    // baseline=0 => treat as infinite % jump if observed>0
+    if (observed < thresholds.minObserved) continue;
+    if (delta < thresholds.minAbsDelta) continue;
+
+    // If baseline is tiny (often happens for “new” services), only flag meaningful absolute spikes
+    if (baseline < thresholds.minBaseline && observed < thresholds.minObservedIfBaselineTiny) continue;
+
     const pctChange = baseline <= 0 ? Number.POSITIVE_INFINITY : delta / baseline;
     if (!(pctChange > 0)) continue;
 
@@ -85,16 +98,61 @@ export function computeTotalAnomalies(points: TotalDailyPoint[]): AnomalyOut[] {
     const zScore = sd > 0 ? delta / sd : null;
     const pctText = Number.isFinite(pctChange) ? `${Math.round(pctChange * 100)}%` : "∞";
 
+    const label = service === "__TOTAL__" ? "Total spend" : service;
     out.push({
       date: sorted[i].date,
-      service: "__TOTAL__",
+      service,
       observed,
       baseline,
       pctChange,
       zScore,
       severity: sev,
-      message: `Spend jumped ${pctText} vs 7-day baseline (${fmtUSD(observed)} vs ${fmtUSD(baseline)}).`,
+      message: `${label} jumped ${pctText} vs 7-day baseline (${fmtMoneyUSD(observed)} vs ${fmtMoneyUSD(baseline)}).`,
     });
+  }
+
+  return out;
+}
+
+export function computeTotalAnomalies(points: DailyPoint[]): AnomalyOut[] {
+  return computeSeriesAnomalies({
+    points,
+    service: "__TOTAL__",
+    currency: points[0]?.currency ?? "USD",
+    thresholds: {
+      minObserved: TOTAL_MIN_OBSERVED,
+      minAbsDelta: TOTAL_MIN_ABS_DELTA,
+      minBaseline: 0,
+      minObservedIfBaselineTiny: 0,
+    },
+  });
+}
+
+export function computeServiceAnomalies(params: {
+  seriesByService: Map<string, DailyPoint[]>;
+  topServices: string[];
+  currency: string;
+}): AnomalyOut[] {
+  const { seriesByService, topServices, currency } = params;
+  const out: AnomalyOut[] = [];
+
+  for (const service of topServices) {
+    const pts = seriesByService.get(service);
+    if (!pts || pts.length < WINDOW + 1) continue;
+
+    out.push(
+      ...computeSeriesAnomalies({
+        points: pts,
+        service,
+        currency,
+        thresholds: {
+          minObserved: SERVICE_MIN_OBSERVED,
+          minAbsDelta: SERVICE_MIN_ABS_DELTA,
+          minBaseline: SERVICE_MIN_BASELINE,
+          minObservedIfBaselineTiny: SERVICE_MIN_OBSERVED_IF_BASELINE_TINY,
+        },
+      })
+    );
   }
 
   return out;
