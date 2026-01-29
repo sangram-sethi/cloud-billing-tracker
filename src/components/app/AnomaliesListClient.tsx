@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { SyncNowButton } from "@/components/app/SyncNowButton";
+import { AiInsightPanel } from "@/components/app/AiInsightPanel";
 import { AlertTriangle, ChevronDown, ChevronUp } from "lucide-react";
 
 type Severity = "info" | "warning" | "critical";
@@ -101,7 +102,7 @@ export function AnomaliesListClient({ model }: { model: AnomaliesViewModel }) {
         <div>
           <h1 className="text-2xl font-semibold tracking-tight text-foreground">Anomalies</h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Spikes detected using a 7-day baseline (moving average + % jump). Now includes top services.
+            Spikes detected using a 7-day baseline (moving average + % jump). Includes top services.
           </p>
         </div>
 
@@ -260,6 +261,7 @@ export function AnomaliesListClient({ model }: { model: AnomaliesViewModel }) {
                             We compare the day’s spend to the previous 7 days’ average for the same series (Total or service).
                             If it jumps above thresholds, we flag it.
                           </p>
+
                           <div className="mt-3 grid gap-2 sm:grid-cols-3">
                             <div className="rounded-xl border border-white/10 bg-surface/40 p-3">
                               <p className="text-xs text-muted-foreground">Status</p>
@@ -267,13 +269,20 @@ export function AnomaliesListClient({ model }: { model: AnomaliesViewModel }) {
                             </div>
                             <div className="rounded-xl border border-white/10 bg-surface/40 p-3">
                               <p className="text-xs text-muted-foreground">Created</p>
-                              <p className="mt-1 text-sm font-semibold text-foreground">{a.createdAt ? fmtTime(a.createdAt) : "—"}</p>
+                              <p className="mt-1 text-sm font-semibold text-foreground">
+                                {a.createdAt ? fmtTime(a.createdAt) : "—"}
+                              </p>
                             </div>
                             <div className="rounded-xl border border-white/10 bg-surface/40 p-3">
                               <p className="text-xs text-muted-foreground">Updated</p>
-                              <p className="mt-1 text-sm font-semibold text-foreground">{a.updatedAt ? fmtTime(a.updatedAt) : "—"}</p>
+                              <p className="mt-1 text-sm font-semibold text-foreground">
+                                {a.updatedAt ? fmtTime(a.updatedAt) : "—"}
+                              </p>
                             </div>
                           </div>
+
+                          {/* ✅ Step 6: AI insight (quota-safe) */}
+                          <AiInsightPanel date={a.date} service={a.service} />
                         </div>
                       ) : null}
                     </div>
@@ -291,17 +300,17 @@ export function AnomaliesListClient({ model }: { model: AnomaliesViewModel }) {
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              {["AI suggestions (Gemini, optional)", "Email alerts", "Weekly founder report"].map((t) => (
+              {["Email alerts", "Weekly founder report", "Stripe gating (1 plan)"].map((t) => (
                 <div key={t} className="rounded-2xl border border-white/10 bg-surface/40 p-4">
                   <p className="text-sm font-semibold text-foreground">{t}</p>
-                  <p className="mt-1 text-sm text-muted-foreground">We’ll keep it pluggable and non-crashy on quota limits.</p>
+                  <p className="mt-1 text-sm text-muted-foreground">Now that anomalies + AI insight exist, these become easy and clean.</p>
                 </div>
               ))}
             </div>
 
             <div className="mt-4 flex items-start gap-2 text-xs text-muted-foreground">
               <AlertTriangle className="mt-0.5 h-4 w-4" />
-              Service anomalies are computed only for the top services by spend to keep results high-signal.
+              AI is optional; the product remains usable even when quota is reached.
             </div>
           </CardContent>
         </Card>
