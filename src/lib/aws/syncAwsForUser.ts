@@ -6,6 +6,7 @@ import { decryptCredential } from "@/lib/aws/crypto";
 import { pullDailyCostsLastNDays } from "@/lib/aws/pullDailyCosts";
 import { computeTotalAnomalies, computeServiceAnomalies, type DailyPoint } from "@/lib/aws/anomalyEngine";
 import { sendAnomalyEmailAlerts } from "@/lib/notifications/sendAnomalyEmailAlerts";
+import { sendAnomalyWhatsAppAlerts } from "@/lib/notifications/sendAnomalyWhatsAppAlerts";
 
 export type SyncAwsOk = {
   ok: true;
@@ -32,11 +33,9 @@ export type SyncAwsResult = SyncAwsOk | SyncAwsErr;
 function ymdUTC(d: Date) {
   return d.toISOString().slice(0, 10);
 }
-
 function parseYmdToUTCDate(ymd: string) {
   return new Date(ymd + "T00:00:00Z");
 }
-
 function listDates(start: string, endExclusive: string) {
   const out: string[] = [];
   let cur = parseYmdToUTCDate(start);
@@ -99,7 +98,7 @@ export async function syncAwsForUser(params: { userId: ObjectId; days: number })
     return { ok: false, code: pulled.code, message: pulled.message };
   }
 
-  // 1) Store daily costs (idempotent upserts)
+  // 1) Store daily costs
   const costCol = await costDailyCol();
 
   const costOps: AnyBulkWriteOperation<any>[] = pulled.rows.map((r) => ({
@@ -127,7 +126,6 @@ export async function syncAwsForUser(params: { userId: ObjectId; days: number })
     await costCol.bulkWrite(costOps, { ordered: false });
   }
 
-  // Build date axis for stability
   const dates = listDates(pulled.start, pulled.endExclusive);
   const currency = pulled.rows.find((r) => r.service === "__TOTAL__")?.currency ?? "USD";
 
@@ -184,7 +182,6 @@ export async function syncAwsForUser(params: { userId: ObjectId; days: number })
   const anomalies = [...totalAnoms, ...serviceAnoms];
 
   // 4) Store anomalies (idempotent upserts)
-  // IMPORTANT: do NOT wipe AI insight/status if already generated.
   const aCol = await anomaliesCol();
   const aOps: AnyBulkWriteOperation<any>[] = anomalies.map((a) => ({
     updateOne: {
@@ -217,10 +214,31 @@ export async function syncAwsForUser(params: { userId: ObjectId; days: number })
     await aCol.bulkWrite(aOps, { ordered: false });
   }
 
-  // ✅ Step 8: Send anomaly emails (deduped, non-blocking)
-  // Default threshold: warning+ (you can add UI preferences later)
+  // Step 8: Email alerts (deduped)
   try {
     await sendAnomalyEmailAlerts({
+      userId,
+      anomalies: anomalies.map((a) => ({
+        date: a.date,
+        service: a.service,
+        severity: a.severity,
+        message: a.message,
+        observed: a.observed,
+        baseline: a.baseline,
+        pctChange: a.pctChange,
+        zScore: a.zScore,
+        status: "open",
+      })),
+      currency,
+      minSeverity: "warning",
+    });
+  } catch {
+    // never crash sync
+  }
+
+  // ✅ Step 10: WhatsApp alerts (deduped, requires verified+enabled)
+  try {
+    await sendAnomalyWhatsAppAlerts({
       userId,
       anomalies: anomalies.map((a) => ({
         date: a.date,

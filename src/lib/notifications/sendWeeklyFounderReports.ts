@@ -1,7 +1,7 @@
 import { ObjectId } from "mongodb";
 
 import { getDb } from "@/lib/mongodb";
-import { ensureNotificationIndexes } from "@/lib/notifications/indexes";
+import { ensureNotificationIndexes } from "@/lib/notifications/indexs";
 import { buildWeeklyFounderReport, defaultWeeklyWindow } from "@/lib/reports/weeklyFounderReport";
 import { sendWeeklyFounderReportEmail } from "@/lib/resend";
 

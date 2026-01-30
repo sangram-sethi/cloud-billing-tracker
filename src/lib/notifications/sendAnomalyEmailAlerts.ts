@@ -1,7 +1,7 @@
 import { ObjectId } from "mongodb";
 
 import { getDb } from "@/lib/mongodb";
-import { ensureNotificationIndexes } from "@/lib/notifications/indexes";
+import { ensureNotificationIndexes } from "@/lib/notifications/indexs";
 import { sendAnomalyAlertEmail } from "@/lib/resend";
 
 type Severity = "info" | "warning" | "critical";
