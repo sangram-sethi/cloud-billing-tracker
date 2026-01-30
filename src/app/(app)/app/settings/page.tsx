@@ -2,12 +2,12 @@ import { auth } from "@/auth";
 import { SignOutButton } from "@/components/auth/SignOutButton";
 import { Badge } from "@/components/ui/Badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/Card";
+import { NotificationSettingsCard } from "@/components/settings/NotificationSettingsCard";
 
 const blocks = [
   { title: "Budgets", desc: "Set monthly thresholds and burn-rate alerts.", tag: "Soon" },
-  { title: "Notifications", desc: "Email now, WhatsApp later. Configure severity rules.", tag: "Soon" },
   { title: "Team access", desc: "Invite team members and control permissions.", tag: "Soon" },
-  { title: "Integrations", desc: "Add AWS accounts, later GCP/Azure.", tag: "Soon" }
+  { title: "Integrations", desc: "Add AWS accounts, later GCP/Azure.", tag: "Soon" },
 ];
 
 export default async function SettingsPage() {
@@ -19,7 +19,7 @@ export default async function SettingsPage() {
         <div>
           <h1 className="text-2xl font-semibold tracking-tight text-foreground">Settings</h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Account is live. Next we wire AWS, budgets, anomaly alerts, and weekly reports.
+            Configure alerts, AI insights, and your account. Budgets + team access land next.
           </p>
         </div>
 
@@ -49,6 +49,8 @@ export default async function SettingsPage() {
           </div>
         </CardContent>
       </Card>
+
+      <NotificationSettingsCard />
 
       <div className="grid gap-4 sm:grid-cols-2">
         {blocks.map((b) => (
