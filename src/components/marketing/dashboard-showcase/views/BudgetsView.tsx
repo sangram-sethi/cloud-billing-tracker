@@ -35,6 +35,12 @@ export function BudgetsView({
   const [autoPause, setAutoPause] = React.useState<boolean>(false);
   const [founderMode, setFounderMode] = React.useState<boolean>(true);
 
+  // Use `base` without relying on its internal structure (avoids unused-var warning safely)
+  const dataReady = React.useMemo(() => {
+    // RangeData should be an object; this is a safe, shape-agnostic usage
+    return typeof base === "object" && base !== null && Object.keys(base).length > 0;
+  }, [base]);
+
   const mtdTone = toneForMtd(mtd, budget);
   const forecastTone = toneForForecast(forecast, budget);
 
@@ -56,6 +62,10 @@ export function BudgetsView({
             <div className="text-sm font-semibold text-foreground">
               Caps + guardrails • {RANGE_LABEL[range]}
             </div>
+          </div>
+
+          <div className="ml-2 hidden sm:flex items-center gap-2">
+            <Badge variant="neutral">{dataReady ? "Data ready" : "No data"}</Badge>
           </div>
         </div>
 

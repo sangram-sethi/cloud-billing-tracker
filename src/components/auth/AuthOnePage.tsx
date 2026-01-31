@@ -17,6 +17,17 @@ import { signInWithLoginToken } from "@/lib/auth/signInWithLoginToken";
 type Mode = "login" | "signup";
 type Step = "details" | "otp";
 
+function isRecord(v: unknown): v is Record<string, unknown> {
+  return typeof v === "object" && v !== null;
+}
+
+function getErrorMessage(err: unknown, fallback = "Something went wrong") {
+  if (err instanceof Error) return err.message || fallback;
+  if (typeof err === "string") return err;
+  if (isRecord(err) && typeof err.message === "string") return err.message;
+  return fallback;
+}
+
 function EyeIcon({ open }: { open: boolean }) {
   // open=true => “eye open” (password visible), open=false => “eye with slash”
   return open ? (
@@ -130,17 +141,27 @@ export function AuthOnePage({ initialMode }: { initialMode: Mode }) {
         }),
       });
 
-      const data = await res.json();
-      if (!res.ok) throw new Error(data?.error || "Failed to send code");
+      const data: unknown = await res.json().catch(() => null);
+
+      if (!res.ok) {
+        const serverErr =
+          isRecord(data) && typeof data.error === "string" ? data.error : "Failed to send code";
+        throw new Error(serverErr);
+      }
+
+      const nextChallengeId =
+        isRecord(data) && typeof data.challengeId === "string" ? data.challengeId : null;
+
+      if (!nextChallengeId) throw new Error("Challenge missing from server response.");
 
       // Turnstile token is single-use
       setCaptchaToken(null);
       turnstileRef.current?.reset();
 
-      setChallengeId(data.challengeId);
+      setChallengeId(nextChallengeId);
       setStep("otp");
-    } catch (err: any) {
-      setError(err?.message || "Something went wrong");
+    } catch (err: unknown) {
+      setError(getErrorMessage(err));
       setCaptchaToken(null);
       turnstileRef.current?.reset();
     } finally {
@@ -169,13 +190,22 @@ export function AuthOnePage({ initialMode }: { initialMode: Mode }) {
         }),
       });
 
-      const data = await res.json();
-      if (!res.ok) throw new Error(data?.error || "Invalid code");
-      if (!data?.loginToken) throw new Error("Login token missing. Please retry.");
+      const data: unknown = await res.json().catch(() => null);
 
-      await signInWithLoginToken(data.loginToken, "/app");
-    } catch (err: any) {
-      setError(err?.message || "Something went wrong");
+      if (!res.ok) {
+        const serverErr =
+          isRecord(data) && typeof data.error === "string" ? data.error : "Invalid code";
+        throw new Error(serverErr);
+      }
+
+      const loginToken =
+        isRecord(data) && typeof data.loginToken === "string" ? data.loginToken : null;
+
+      if (!loginToken) throw new Error("Login token missing. Please retry.");
+
+      await signInWithLoginToken(loginToken, "/app");
+    } catch (err: unknown) {
+      setError(getErrorMessage(err));
     } finally {
       setLoading(false);
     }
@@ -234,21 +264,13 @@ export function AuthOnePage({ initialMode }: { initialMode: Mode }) {
             </div>
           </div>
 
-          {/* ✅ Subtitle removed */}
           <div className="mt-4 text-center">
             <div className="text-base font-semibold tracking-tight text-foreground">{title}</div>
           </div>
         </CardHeader>
 
         <CardContent className="p-6 pt-0">
-          <Button
-            type="button"
-            variant="secondary"
-            size="md"
-            className="w-full"
-            onClick={google}
-            disabled={loading}
-          >
+          <Button type="button" variant="secondary" size="md" className="w-full" onClick={google} disabled={loading}>
             Continue with Google
           </Button>
 
@@ -294,7 +316,6 @@ export function AuthOnePage({ initialMode }: { initialMode: Mode }) {
               <div className="space-y-1.5">
                 <Label htmlFor="password">Password</Label>
 
-                {/* ✅ Password show/hide */}
                 <div className="relative">
                   <Input
                     id="password"
@@ -357,10 +378,7 @@ export function AuthOnePage({ initialMode }: { initialMode: Mode }) {
                     Terms
                   </Link>{" "}
                   and{" "}
-                  <Link
-                    className="text-foreground/90 hover:text-foreground underline underline-offset-4"
-                    href="/privacy"
-                  >
+                  <Link className="text-foreground/90 hover:text-foreground underline underline-offset-4" href="/privacy">
                     Privacy Policy
                   </Link>
                   .
@@ -426,4 +444,3 @@ export function AuthOnePage({ initialMode }: { initialMode: Mode }) {
     </div>
   );
 }
-

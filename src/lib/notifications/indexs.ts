@@ -1,19 +1,22 @@
 import { getDb } from "@/lib/mongodb";
+import type { IndexDescription } from "mongodb";
 
-export async function ensureNotificationIndexes() {
+export async function ensureNotificationIndexes(): Promise<void> {
   const db = await getDb();
   const events = db.collection("notification_events");
 
-  const existing = await events.indexes().catch(() => []);
-  const byName = new Map<string, any>();
+  const existing: IndexDescription[] = await events.indexes().catch(() => []);
+  const byName = new Map<string, IndexDescription>();
+
   for (const idx of existing) {
-    if (typeof idx?.name === "string") byName.set(idx.name, idx);
+    if (idx && typeof idx.name === "string") byName.set(idx.name, idx);
   }
 
   // If old indexes exist WITHOUT partialFilterExpression, drop them by constant name.
-  async function dropIfNonPartial(name: string) {
+  async function dropIfNonPartial(name: string): Promise<void> {
     const idx = byName.get(name);
-    if (idx && !idx.partialFilterExpression) {
+    // "partialFilterExpression" missing => older version index; drop it.
+    if (idx && idx.partialFilterExpression == null) {
       try {
         await events.dropIndex(name);
       } catch {
@@ -46,7 +49,7 @@ export async function ensureNotificationIndexes() {
     }
   );
 
-  // ✅ WhatsApp anomaly dedupe (partial)
+  // WhatsApp anomaly dedupe (partial)
   await events.createIndex(
     { userId: 1, kind: 1, channel: 1, date: 1, service: 1 },
     {

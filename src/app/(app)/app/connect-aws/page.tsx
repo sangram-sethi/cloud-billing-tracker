@@ -12,6 +12,17 @@ type ConnectionSummary = {
   lastError: string | null;
 };
 
+type AwsConnectionDoc = {
+  _id?: ObjectId;
+  userId: ObjectId;
+  status?: string | null; // "connected" | "failed" | etc
+  accessKeyId?: string | null;
+  region?: string | null;
+  lastValidatedAt?: Date | string | null;
+  lastSyncAt?: Date | string | null;
+  lastError?: string | null;
+};
+
 function toObjectId(value: unknown): ObjectId | null {
   if (!value) return null;
   if (value instanceof ObjectId) return value;
@@ -23,6 +34,12 @@ function toObjectId(value: unknown): ObjectId | null {
     // ignore
   }
   return null;
+}
+
+function toIsoOrNull(v: unknown): string | null {
+  if (!v) return null;
+  const d = v instanceof Date ? v : new Date(String(v));
+  return Number.isFinite(d.getTime()) ? d.toISOString() : null;
 }
 
 export default async function ConnectAwsPage() {
@@ -40,15 +57,19 @@ export default async function ConnectAwsPage() {
 
   if (userId) {
     const db = await getDb();
-    const conn = await db.collection<any>("aws_connections").findOne({ userId });
+    const conn = await db.collection<AwsConnectionDoc>("aws_connections").findOne({ userId });
+
     if (conn) {
+      const statusRaw = typeof conn.status === "string" ? conn.status : "";
+      const status: ConnectionSummary["status"] = statusRaw === "connected" ? "connected" : "failed";
+
       initial = {
-        status: conn.status === "connected" ? "connected" : "failed",
+        status,
         accessKeySuffix: typeof conn.accessKeyId === "string" ? conn.accessKeyId.slice(-4) : null,
-        region: conn.region ?? null,
-        lastValidatedAt: conn.lastValidatedAt ? new Date(conn.lastValidatedAt).toISOString() : null,
-        lastSyncAt: conn.lastSyncAt ? new Date(conn.lastSyncAt).toISOString() : null,
-        lastError: conn.lastError ?? null,
+        region: typeof conn.region === "string" ? conn.region : null,
+        lastValidatedAt: toIsoOrNull(conn.lastValidatedAt),
+        lastSyncAt: toIsoOrNull(conn.lastSyncAt),
+        lastError: typeof conn.lastError === "string" ? conn.lastError : null,
       };
     }
   }

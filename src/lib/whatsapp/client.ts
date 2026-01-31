@@ -4,14 +4,39 @@ type WhatsAppSendHardFail = { ok: false; status: "error"; message: string };
 
 export type WhatsAppSendResult = WhatsAppSendOk | WhatsAppSendSoftFail | WhatsAppSendHardFail;
 
-function normalizePhoneE164(phone: string) {
-  const p = phone.trim().replace(/\s+/g, "");
-  return p;
+function isRecord(v: unknown): v is Record<string, unknown> {
+  return typeof v === "object" && v !== null;
 }
 
-function ensureWhatsAppTo(phoneE164: string) {
+function normalizePhoneE164(phone: string): string {
+  return phone.trim().replace(/\s+/g, "");
+}
+
+function ensureWhatsAppTo(phoneE164: string): string {
   // Twilio requires "whatsapp:+E164"
   return phoneE164.startsWith("whatsapp:") ? phoneE164 : `whatsapp:${phoneE164}`;
+}
+
+function getTwilioErrorMessage(json: unknown, status: number): string {
+  if (isRecord(json)) {
+    const message = json.message;
+    const errorMessage = json.error_message;
+    if (typeof message === "string" && message.trim()) return message;
+    if (typeof errorMessage === "string" && errorMessage.trim()) return errorMessage;
+  }
+  return `Twilio error (${status})`;
+}
+
+function getSid(json: unknown): string | undefined {
+  if (!isRecord(json)) return undefined;
+  const sid = json.sid;
+  return typeof sid === "string" ? sid : undefined;
+}
+
+function getErrorMessage(e: unknown): string {
+  if (e instanceof Error && typeof e.message === "string") return e.message;
+  if (isRecord(e) && typeof e.message === "string") return e.message;
+  return "WhatsApp send failed.";
 }
 
 export async function sendWhatsAppMessage(params: { toE164: string; body: string }): Promise<WhatsAppSendResult> {
@@ -32,7 +57,7 @@ export async function sendWhatsAppMessage(params: { toE164: string; body: string
   const to = ensureWhatsAppTo(normalizePhoneE164(params.toE164));
 
   const url = `https://api.twilio.com/2010-04-01/Accounts/${accountSid}/Messages.json`;
-  const body = new URLSearchParams({
+  const form = new URLSearchParams({
     From: from,
     To: to,
     Body: params.body,
@@ -45,7 +70,7 @@ export async function sendWhatsAppMessage(params: { toE164: string; body: string
         Authorization: `Basic ${Buffer.from(`${accountSid}:${authToken}`).toString("base64")}`,
         "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8",
       },
-      body,
+      body: form,
     });
 
     // Quota / throttling
@@ -53,20 +78,16 @@ export async function sendWhatsAppMessage(params: { toE164: string; body: string
       return { ok: true, status: "quota", message: "WhatsApp provider rate limit reached." };
     }
 
-    const json: any = await res.json().catch(() => null);
+    const json: unknown = await res.json().catch(() => null);
 
     if (!res.ok) {
-      const msg =
-        (json && (json.message || json.error_message)) ||
-        `Twilio error (${res.status})`;
-
+      const msg = getTwilioErrorMessage(json, res.status);
       // Common “can’t send / not opted-in / trial restrictions” → treat as unavailable (soft-fail)
       return { ok: true, status: "unavailable", message: msg };
     }
 
-    return { ok: true, status: "ok", sid: typeof json?.sid === "string" ? json.sid : undefined };
-  } catch (e: any) {
-    const msg = typeof e?.message === "string" ? e.message : "WhatsApp send failed.";
-    return { ok: false, status: "error", message: msg };
+    return { ok: true, status: "ok", sid: getSid(json) };
+  } catch (e: unknown) {
+    return { ok: false, status: "error", message: getErrorMessage(e) };
   }
 }

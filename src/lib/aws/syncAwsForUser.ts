@@ -2,6 +2,7 @@ import { ObjectId, type AnyBulkWriteOperation } from "mongodb";
 
 import { ensureAwsIndexes } from "@/lib/aws/indexes";
 import { awsConnectionsCol, costDailyCol, anomaliesCol } from "@/lib/aws/collections";
+import type { AnomalyDoc, CostDailyDoc } from "@/lib/aws/types";
 import { decryptCredential } from "@/lib/aws/crypto";
 import { pullDailyCostsLastNDays } from "@/lib/aws/pullDailyCosts";
 import { computeTotalAnomalies, computeServiceAnomalies, type DailyPoint } from "@/lib/aws/anomalyEngine";
@@ -101,26 +102,28 @@ export async function syncAwsForUser(params: { userId: ObjectId; days: number })
   // 1) Store daily costs
   const costCol = await costDailyCol();
 
-  const costOps: AnyBulkWriteOperation<any>[] = pulled.rows.map((r) => ({
-    updateOne: {
-      filter: { userId, date: r.date, service: r.service },
-      update: {
-        $set: {
-          amount: r.amount,
-          currency: r.currency,
-          source: "aws_ce",
-          updatedAt: now,
+  const costOps: AnyBulkWriteOperation<CostDailyDoc>[] = pulled.rows.map(
+    (r): AnyBulkWriteOperation<CostDailyDoc> => ({
+      updateOne: {
+        filter: { userId, date: r.date, service: r.service },
+        update: {
+          $set: {
+            amount: r.amount,
+            currency: r.currency,
+            source: "aws_ce",
+            updatedAt: now,
+          },
+          $setOnInsert: {
+            createdAt: now,
+            userId,
+            date: r.date,
+            service: r.service,
+          },
         },
-        $setOnInsert: {
-          createdAt: now,
-          userId,
-          date: r.date,
-          service: r.service,
-        },
+        upsert: true,
       },
-      upsert: true,
-    },
-  }));
+    })
+  );
 
   if (costOps.length > 0) {
     await costCol.bulkWrite(costOps, { ordered: false });
@@ -135,11 +138,13 @@ export async function syncAwsForUser(params: { userId: ObjectId; days: number })
     if (r.service !== "__TOTAL__") continue;
     totalMap.set(r.date, r.amount);
   }
+
   const totalSeries: DailyPoint[] = dates.map((date) => ({
     date,
     amount: totalMap.get(date) ?? 0,
     currency,
   }));
+
   const totalAnoms = computeTotalAnomalies(totalSeries);
 
   // 3) Service anomalies (top services by spend)
@@ -179,36 +184,39 @@ export async function syncAwsForUser(params: { userId: ObjectId; days: number })
 
   const serviceAnoms = computeServiceAnomalies({ seriesByService, topServices, currency });
 
-  const anomalies = [...totalAnoms, ...serviceAnoms];
+  const allAnomalies = [...totalAnoms, ...serviceAnoms];
 
   // 4) Store anomalies (idempotent upserts)
   const aCol = await anomaliesCol();
-  const aOps: AnyBulkWriteOperation<any>[] = anomalies.map((a) => ({
-    updateOne: {
-      filter: { userId, date: a.date, service: a.service },
-      update: {
-        $set: {
-          observed: a.observed,
-          baseline: a.baseline,
-          pctChange: a.pctChange,
-          zScore: a.zScore,
-          severity: a.severity,
-          message: a.message,
-          updatedAt: now,
+
+  const aOps: AnyBulkWriteOperation<AnomalyDoc>[] = allAnomalies.map(
+    (a): AnyBulkWriteOperation<AnomalyDoc> => ({
+      updateOne: {
+        filter: { userId, date: a.date, service: a.service },
+        update: {
+          $set: {
+            observed: a.observed,
+            baseline: a.baseline,
+            pctChange: a.pctChange,
+            zScore: a.zScore,
+            severity: a.severity,
+            message: a.message,
+            updatedAt: now,
+          },
+          $setOnInsert: {
+            createdAt: now,
+            userId,
+            date: a.date,
+            service: a.service,
+            status: "open",
+            aiInsight: null,
+            aiStatus: null,
+          },
         },
-        $setOnInsert: {
-          createdAt: now,
-          userId,
-          date: a.date,
-          service: a.service,
-          status: "open",
-          aiInsight: null,
-          aiStatus: null,
-        },
+        upsert: true,
       },
-      upsert: true,
-    },
-  }));
+    })
+  );
 
   if (aOps.length > 0) {
     await aCol.bulkWrite(aOps, { ordered: false });
@@ -218,7 +226,7 @@ export async function syncAwsForUser(params: { userId: ObjectId; days: number })
   try {
     await sendAnomalyEmailAlerts({
       userId,
-      anomalies: anomalies.map((a) => ({
+      anomalies: allAnomalies.map((a) => ({
         date: a.date,
         service: a.service,
         severity: a.severity,
@@ -240,7 +248,7 @@ export async function syncAwsForUser(params: { userId: ObjectId; days: number })
   try {
     await sendAnomalyWhatsAppAlerts({
       userId,
-      anomalies: anomalies.map((a) => ({
+      anomalies: allAnomalies.map((a) => ({
         date: a.date,
         service: a.service,
         severity: a.severity,
@@ -282,7 +290,7 @@ export async function syncAwsForUser(params: { userId: ObjectId; days: number })
       totalOnly: false,
       totalCount: totalAnoms.length,
       serviceCount: serviceAnoms.length,
-      count: anomalies.length,
+      count: allAnomalies.length,
       topServicesScanned: topServices.length,
     },
     syncedAt: now,

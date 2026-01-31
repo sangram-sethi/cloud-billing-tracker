@@ -8,13 +8,52 @@ import { syncAwsForUser } from "@/lib/aws/syncAwsForUser";
 export const runtime = "nodejs";
 
 type CronLockDoc = {
-  _id: string; // string id (e.g. "aws_auto_sync")
+  _id: string; // e.g. "aws_auto_sync"
   lockUntil?: Date;
   lockedAt?: Date;
   lockedBy?: string;
   createdAt?: Date;
   updatedAt?: Date;
 };
+
+type AwsConnSyncRow = {
+  userId?: ObjectId;
+  status?: string;
+  lastSyncAt?: Date;
+};
+
+type SyncResultLike = {
+  ok?: boolean;
+  code?: string;
+  message?: string;
+};
+
+function isRecord(v: unknown): v is Record<string, unknown> {
+  return typeof v === "object" && v !== null;
+}
+
+function pickBool(obj: Record<string, unknown>, key: string): boolean | undefined {
+  const v = obj[key];
+  return typeof v === "boolean" ? v : undefined;
+}
+
+function pickString(obj: Record<string, unknown>, key: string): string | undefined {
+  const v = obj[key];
+  return typeof v === "string" ? v : undefined;
+}
+
+function asSyncResultLike(v: unknown): SyncResultLike {
+  if (!isRecord(v)) return {};
+  return {
+    ok: pickBool(v, "ok"),
+    code: pickString(v, "code"),
+    message: pickString(v, "message"),
+  };
+}
+
+function isObjectId(v: unknown): v is ObjectId {
+  return v instanceof ObjectId;
+}
 
 function getSecretFromReq(req: Request) {
   const url = new URL(req.url);
@@ -34,10 +73,8 @@ async function acquireLock(params: { key: string; ttlMs: number; owner: string }
   const now = new Date();
   const lockUntil = new Date(now.getTime() + params.ttlMs);
 
-  // Mongo driver typings differ by version:
-  // - some return ModifyResult with `.value`
-  // - some return the document directly (or null)
-  const updated: any = await locks.findOneAndUpdate(
+  // On mongodb@6.x, findOneAndUpdate returns the doc (or null) when includeResultMetadata is not used.
+  const doc = await locks.findOneAndUpdate(
     {
       _id: params.key,
       $or: [{ lockUntil: { $exists: false } }, { lockUntil: { $lte: now } }],
@@ -49,12 +86,8 @@ async function acquireLock(params: { key: string; ttlMs: number; owner: string }
     {
       upsert: true,
       returnDocument: "after",
-      // includeResultMetadata exists on some versions; safe to pass via `any`
-      includeResultMetadata: true,
-    } as any
+    }
   );
-
-  const doc: CronLockDoc | null = (updated && typeof updated === "object" && "value" in updated ? updated.value : updated) ?? null;
 
   if (!doc) return { ok: false as const };
   return { ok: true as const, lock: doc };
@@ -65,10 +98,7 @@ async function releaseLock(params: { key: string; owner: string }) {
   const locks = db.collection<CronLockDoc>("cron_locks");
   const now = new Date();
 
-  await locks.updateOne(
-    { _id: params.key, lockedBy: params.owner },
-    { $set: { lockUntil: now, updatedAt: now } }
-  );
+  await locks.updateOne({ _id: params.key, lockedBy: params.owner }, { $set: { lockUntil: now, updatedAt: now } });
 }
 
 async function runPool<T, R>(items: T[], concurrency: number, worker: (item: T) => Promise<R>) {
@@ -123,7 +153,7 @@ export async function GET(req: Request) {
     await ensureAwsIndexes();
 
     const db = await getDb();
-    const connCol = db.collection("aws_connections"); // untyped to avoid schema friction
+    const connCol = db.collection<AwsConnSyncRow>("aws_connections");
 
     const cutoff = new Date(Date.now() - hoursToMs(safeMinHours));
 
@@ -138,17 +168,15 @@ export async function GET(req: Request) {
       .limit(safeMax)
       .toArray();
 
-    const users: ObjectId[] = conns
-      .map((c: any) => c.userId)
-      .filter((id: any) => id && typeof id === "object");
+    const users: ObjectId[] = conns.map((c) => c.userId).filter(isObjectId);
 
     const results = await runPool(users, safeConc, async (userId) => {
-      const r = await syncAwsForUser({ userId, days: safeDays });
-      return { userId: String(userId), result: r };
+      const resultUnknown: unknown = await syncAwsForUser({ userId, days: safeDays });
+      return { userId: userId.toHexString(), result: resultUnknown };
     });
 
-    const ok = results.filter((r) => r.result.ok).length;
-    const failed = results.length - ok;
+    const success = results.filter((r) => asSyncResultLike(r.result).ok === true).length;
+    const failed = results.length - success;
 
     const endedAt = new Date();
 
@@ -160,12 +188,15 @@ export async function GET(req: Request) {
       config: { days: safeDays, maxUsers: safeMax, minHours: safeMinHours, concurrency: safeConc },
       scanned: conns.length,
       processed: results.length,
-      success: ok,
+      success,
       failed,
       failures: results
-        .filter((r) => !r.result.ok)
+        .filter((r) => asSyncResultLike(r.result).ok !== true)
         .slice(0, 25)
-        .map((r) => ({ userId: r.userId, code: (r.result as any).code, message: (r.result as any).message })),
+        .map((r) => {
+          const info = asSyncResultLike(r.result);
+          return { userId: r.userId, code: info.code ?? null, message: info.message ?? null };
+        }),
     });
   } finally {
     await releaseLock({ key: "aws_auto_sync", owner: runId });

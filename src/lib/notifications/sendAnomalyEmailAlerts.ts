@@ -1,7 +1,7 @@
-import { ObjectId } from "mongodb";
+import { ObjectId, type WithId } from "mongodb";
 
 import { getDb } from "@/lib/mongodb";
-import { ensureNotificationIndexes } from "@/lib/notifications/indexs";
+import { ensureNotificationIndexes } from "@/lib/notifications/indexes";
 import { sendAnomalyAlertEmail } from "@/lib/resend";
 
 type Severity = "info" | "warning" | "critical";
@@ -36,12 +36,50 @@ type NotificationEventDoc = {
   error?: string | null;
 };
 
-function pickCurrencyFallback() {
+type SendSummary = {
+  attempted: number;
+  sent: number;
+  skipped: number;
+  failed: number;
+};
+
+function pickCurrencyFallback(): string {
   return "USD";
 }
 
-function normalizeEmail(email: string) {
+function normalizeEmail(email: string): string {
   return email.trim().toLowerCase();
+}
+
+function isRecord(v: unknown): v is Record<string, unknown> {
+  return typeof v === "object" && v !== null;
+}
+
+function getErrorMessage(e: unknown): string {
+  if (e instanceof Error && typeof e.message === "string") return e.message;
+  if (isRecord(e) && typeof e.message === "string") return e.message;
+  return "Email send failed";
+}
+
+/**
+ * Your codebase has mixed mongo typings:
+ * - some environments return ModifyResult { value }
+ * - others return the document directly
+ * This extracts the actual doc safely without using `any`.
+ */
+function extractFindOneAndUpdateDoc(
+  updated: unknown
+): WithId<NotificationEventDoc> | null {
+  if (!updated) return null;
+
+  // Case A: ModifyResult-like shape: { value: doc | null }
+  if (isRecord(updated) && "value" in updated) {
+    const v = (updated as { value?: unknown }).value;
+    return isRecord(v) ? (v as WithId<NotificationEventDoc>) : null;
+  }
+
+  // Case B: Document returned directly
+  return isRecord(updated) ? (updated as WithId<NotificationEventDoc>) : null;
 }
 
 /**
@@ -54,14 +92,14 @@ export async function sendAnomalyEmailAlerts(params: {
   anomalies: AnomalyLike[];
   currency?: string;
   minSeverity?: Severity; // default warning
-}) {
+}): Promise<SendSummary> {
   const db = await getDb();
   await ensureNotificationIndexes();
 
-  const users = db.collection("users");
+  const users = db.collection<{ _id: ObjectId; email?: string | null }>("users");
   const events = db.collection<NotificationEventDoc>("notification_events");
 
-  const user = await users.findOne<{ _id: ObjectId; email?: string | null }>({ _id: params.userId });
+  const user = await users.findOne({ _id: params.userId });
   const toRaw = user?.email;
   if (!toRaw) return { attempted: 0, sent: 0, skipped: params.anomalies.length, failed: 0 };
 
@@ -93,7 +131,7 @@ export async function sendAnomalyEmailAlerts(params: {
       // - doc doesn't exist (new) OR
       // - it failed previously OR
       // - it is stuck in reserved state (stale)
-      const updated: any = await events.findOneAndUpdate(
+      const updatedResult: unknown = await events.findOneAndUpdate(
         {
           userId: params.userId,
           kind: "anomaly_email",
@@ -117,12 +155,10 @@ export async function sendAnomalyEmailAlerts(params: {
             createdAt: now,
           },
         },
-        { upsert: true, returnDocument: "after" } as any
+        { upsert: true, returnDocument: "after" }
       );
 
-      // Mongo driver typing differences: some return doc, some return { value }
-      const doc: NotificationEventDoc | null =
-        (updated && typeof updated === "object" && "value" in updated ? updated.value : updated) ?? null;
+      const doc = extractFindOneAndUpdateDoc(updatedResult);
 
       if (!doc) {
         // Most likely: already "sent" (unique + filter didn't match)
@@ -155,9 +191,9 @@ export async function sendAnomalyEmailAlerts(params: {
       );
 
       sent++;
-    } catch (e: any) {
+    } catch (e: unknown) {
       failed++;
-      const msg = typeof e?.message === "string" ? e.message : "Email send failed";
+      const msg = getErrorMessage(e);
 
       // Record failure (doesn't break sync)
       try {

@@ -2,10 +2,13 @@ import { ObjectId } from "mongodb";
 import { getDb } from "@/lib/mongodb";
 
 type TopServiceRow = { service: string; amount: number };
+
+type AnomalySeverity = "info" | "warning" | "critical";
+
 type AnomalyRow = {
   date: string;
   service: string;
-  severity: "info" | "warning" | "critical";
+  severity: AnomalySeverity;
   message: string;
   observed: number;
   baseline: number;
@@ -27,18 +30,47 @@ export type WeeklyFounderReport = {
   anomalies: AnomalyRow[];
 };
 
-function ymdUTC(d: Date) {
+type CostDailyDoc = {
+  userId: ObjectId;
+  date: string; // ymd
+  service: string;
+  amount: number;
+  currency?: string | null;
+};
+
+type AnomalyDoc = {
+  userId: ObjectId;
+  date: string; // ymd
+  service: string;
+  severity: unknown;
+  message?: string | null;
+  observed?: number | null;
+  baseline?: number | null;
+  pctChange?: number | null;
+  zScore?: number | null;
+};
+
+type TopServiceAggRow = { service: string; amount: number };
+
+function isRecord(v: unknown): v is Record<string, unknown> {
+  return typeof v === "object" && v !== null;
+}
+
+function ymdUTC(d: Date): string {
   return d.toISOString().slice(0, 10);
 }
-function parseYmd(ymd: string) {
-  return new Date(ymd + "T00:00:00Z");
+
+function parseYmd(ymd: string): Date {
+  return new Date(`${ymd}T00:00:00Z`);
 }
-function addDays(ymd: string, delta: number) {
+
+function addDays(ymd: string, delta: number): string {
   const d = parseYmd(ymd);
   d.setUTCDate(d.getUTCDate() + delta);
   return ymdUTC(d);
 }
-function listDates(start: string, endExclusive: string) {
+
+function listDates(start: string, endExclusive: string): string[] {
   const out: string[] = [];
   let cur = parseYmd(start);
   const end = parseYmd(endExclusive);
@@ -48,12 +80,26 @@ function listDates(start: string, endExclusive: string) {
   }
   return out;
 }
-function startOfTodayUTC() {
+
+function startOfTodayUTC(): Date {
   const now = new Date();
   return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
 }
 
-export function defaultWeeklyWindow() {
+function safeNumber(v: unknown): number {
+  return typeof v === "number" && Number.isFinite(v) ? v : 0;
+}
+
+function parseSeverity(v: unknown): AnomalySeverity {
+  const s = String(v ?? "").toLowerCase();
+  if (s === "critical" || s === "high") return "critical";
+  if (s === "warning" || s === "warn" || s === "medium") return "warning";
+  if (s === "info" || s === "low") return "info";
+  // default for anomaly list here: if it's in DB but weird, keep it safe
+  return "warning";
+}
+
+export function defaultWeeklyWindow(): { start: string; end: string; endExclusive: string } {
   // Last 7 complete days ending yesterday (UTC)
   const endExclusive = ymdUTC(startOfTodayUTC()); // today 00:00 UTC
   const end = addDays(endExclusive, -1); // yesterday
@@ -68,8 +114,8 @@ export async function buildWeeklyFounderReport(params: {
 }): Promise<WeeklyFounderReport | null> {
   const db = await getDb();
 
-  const cost = db.collection("cost_daily");
-  const anomalies = db.collection("anomalies");
+  const cost = db.collection<CostDailyDoc>("cost_daily");
+  const anomalies = db.collection<AnomalyDoc>("anomalies");
 
   const window = (() => {
     if (params.start && params.endExclusive) {
@@ -96,10 +142,14 @@ export async function buildWeeklyFounderReport(params: {
     )
     .toArray();
 
-  const currency = (totalRows.find((r: any) => typeof r.currency === "string")?.currency as string) ?? "USD";
+  const currency =
+    totalRows.find((r) => typeof r.currency === "string" && r.currency.trim().length > 0)?.currency ?? "USD";
 
   const totalMap = new Map<string, number>();
-  for (const r of totalRows as any[]) totalMap.set(String(r.date), Number(r.amount ?? 0));
+  for (const r of totalRows) {
+    if (typeof r.date !== "string" || !r.date) continue;
+    totalMap.set(r.date, safeNumber(r.amount));
+  }
 
   const last7Daily = days.map((d) => ({ date: d, amount: totalMap.get(d) ?? 0 }));
   const last7 = last7Daily.reduce((s, x) => s + x.amount, 0);
@@ -112,8 +162,14 @@ export async function buildWeeklyFounderReport(params: {
 
   // Top services (last 7)
   const topServicesAgg = await cost
-    .aggregate([
-      { $match: { userId: params.userId, date: { $gte: window.start, $lt: window.endExclusive }, service: { $ne: "__TOTAL__" } } },
+    .aggregate<TopServiceAggRow>([
+      {
+        $match: {
+          userId: params.userId,
+          date: { $gte: window.start, $lt: window.endExclusive },
+          service: { $ne: "__TOTAL__" },
+        },
+      },
       { $group: { _id: "$service", amount: { $sum: "$amount" } } },
       { $sort: { amount: -1 } },
       { $limit: 6 },
@@ -121,9 +177,9 @@ export async function buildWeeklyFounderReport(params: {
     ])
     .toArray();
 
-  const topServices = (topServicesAgg as any[]).map((r) => ({
-    service: String(r.service),
-    amount: Number(r.amount ?? 0),
+  const topServices: TopServiceRow[] = topServicesAgg.map((r) => ({
+    service: typeof r.service === "string" ? r.service : String((isRecord(r) ? r.service : "") ?? ""),
+    amount: safeNumber(r.amount),
   }));
 
   // Anomalies in last 7 (warning/critical)
@@ -140,15 +196,15 @@ export async function buildWeeklyFounderReport(params: {
     .limit(10)
     .toArray();
 
-  const anomList: AnomalyRow[] = (anomRows as any[]).map((a) => ({
-    date: String(a.date),
-    service: String(a.service),
-    severity: (a.severity as any) ?? "warning",
-    message: String(a.message ?? ""),
-    observed: Number(a.observed ?? 0),
-    baseline: Number(a.baseline ?? 0),
-    pctChange: Number(a.pctChange ?? 0),
-    zScore: a.zScore == null ? null : Number(a.zScore),
+  const anomList: AnomalyRow[] = anomRows.map((a) => ({
+    date: typeof a.date === "string" ? a.date : String(a.date ?? ""),
+    service: typeof a.service === "string" ? a.service : String(a.service ?? ""),
+    severity: parseSeverity(a.severity),
+    message: typeof a.message === "string" ? a.message : "",
+    observed: safeNumber(a.observed),
+    baseline: safeNumber(a.baseline),
+    pctChange: safeNumber(a.pctChange),
+    zScore: a.zScore == null ? null : safeNumber(a.zScore),
   }));
 
   // If literally nothing to report (very early user), skip sending

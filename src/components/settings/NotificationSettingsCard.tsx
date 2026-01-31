@@ -26,6 +26,16 @@ type WhatsAppStartOk =
 
 type WhatsAppConfirmOk = { ok: true; status: "verified" };
 
+function isRecord(v: unknown): v is Record<string, unknown> {
+  return typeof v === "object" && v !== null;
+}
+
+function getErrorMessage(e: unknown, fallback: string) {
+  if (e instanceof Error && typeof e.message === "string" && e.message.trim()) return e.message;
+  if (isRecord(e) && typeof e.message === "string" && e.message.trim()) return e.message;
+  return fallback;
+}
+
 function toneForEnabled(enabled: boolean) {
   return enabled ? "primary" : "neutral";
 }
@@ -166,6 +176,7 @@ export function NotificationSettingsCard() {
       });
 
       const json = (await res.json().catch(() => null)) as WhatsAppStartOk | ApiErr | null;
+
       if (json && "ok" in json && json.ok) {
         if (json.status === "sent") {
           setWaState({ kind: "sent" });
@@ -174,17 +185,20 @@ export function NotificationSettingsCard() {
         }
 
         const msg =
-          ("message" in json && json.message) ? json.message : "WhatsApp is unavailable right now.";
+          ("message" in json && typeof json.message === "string" && json.message.trim())
+            ? json.message
+            : "WhatsApp is unavailable right now.";
+
         if (json.status === "error") setWaState({ kind: "error", message: msg });
         else setWaState({ kind: "soft", message: msg });
         return;
       }
 
       setWaState({ kind: "error", message: "Could not start verification." });
-    } catch (e: any) {
+    } catch (e: unknown) {
       setWaState({
         kind: "error",
-        message: typeof e?.message === "string" ? e.message : "Could not start verification.",
+        message: getErrorMessage(e, "Could not start verification."),
       });
     }
   }
@@ -199,6 +213,7 @@ export function NotificationSettingsCard() {
       });
 
       const json = (await res.json().catch(() => null)) as WhatsAppConfirmOk | ApiErr | null;
+
       if (json && "ok" in json && json.ok && json.status === "verified") {
         setWaState({ kind: "done" });
         setCode("");
@@ -207,12 +222,12 @@ export function NotificationSettingsCard() {
       }
 
       const msg =
-        (json && "error" in json && typeof json.error === "string") ? json.error : "Verification failed.";
+        json && "error" in json && typeof json.error === "string" ? json.error : "Verification failed.";
       setWaState({ kind: "error", message: msg });
-    } catch (e: any) {
+    } catch (e: unknown) {
       setWaState({
         kind: "error",
-        message: typeof e?.message === "string" ? e.message : "Verification failed.",
+        message: getErrorMessage(e, "Verification failed."),
       });
     }
   }
@@ -323,12 +338,8 @@ export function NotificationSettingsCard() {
           {waState.kind === "done" ? (
             <p className="mt-3 text-xs text-success">Verified. You can enable WhatsApp alerts now.</p>
           ) : null}
-          {waState.kind === "soft" ? (
-            <p className="mt-3 text-xs text-muted-foreground">{waState.message}</p>
-          ) : null}
-          {waState.kind === "error" ? (
-            <p className="mt-3 text-xs text-danger">{waState.message}</p>
-          ) : null}
+          {waState.kind === "soft" ? <p className="mt-3 text-xs text-muted-foreground">{waState.message}</p> : null}
+          {waState.kind === "error" ? <p className="mt-3 text-xs text-danger">{waState.message}</p> : null}
         </div>
       </CardContent>
     </Card>

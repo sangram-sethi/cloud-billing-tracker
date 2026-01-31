@@ -33,11 +33,27 @@ export type PullCostsResult =
       rawName?: string;
     };
 
-function normalizeAwsError(err: unknown) {
-  const e = err as any;
-  const name: string = e?.name || e?.Code || "AwsError";
-  const message: string = e?.message || "AWS error";
-  const httpStatus: number | undefined = e?.$metadata?.httpStatusCode;
+function isRecord(v: unknown): v is Record<string, unknown> {
+  return typeof v === "object" && v !== null;
+}
+
+function getStringProp(obj: Record<string, unknown>, key: string): string | undefined {
+  const v = obj[key];
+  return typeof v === "string" ? v : undefined;
+}
+
+function getNestedHttpStatus(obj: Record<string, unknown>): number | undefined {
+  const meta = obj.$metadata;
+  if (!isRecord(meta)) return undefined;
+  const code = meta.httpStatusCode;
+  return typeof code === "number" ? code : undefined;
+}
+
+function normalizeAwsError(err: unknown): { name: string; message: string; httpStatus?: number } {
+  if (!isRecord(err)) return { name: "AwsError", message: "AWS error" };
+  const name = getStringProp(err, "name") ?? getStringProp(err, "Code") ?? "AwsError";
+  const message = getStringProp(err, "message") ?? "AWS error";
+  const httpStatus = getNestedHttpStatus(err);
   return { name, message, httpStatus };
 }
 

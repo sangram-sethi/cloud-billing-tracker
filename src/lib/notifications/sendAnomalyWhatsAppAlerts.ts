@@ -1,7 +1,7 @@
-import { ObjectId } from "mongodb";
+import { ObjectId, type WithId } from "mongodb";
 
 import { getDb } from "@/lib/mongodb";
-import { ensureNotificationIndexes } from "@/lib/notifications/indexs";
+import { ensureNotificationIndexes } from "@/lib/notifications/indexes";
 import { sendWhatsAppMessage } from "@/lib/whatsapp/client";
 
 type Severity = "info" | "warning" | "critical";
@@ -35,11 +35,26 @@ type NotificationEventDoc = {
   error?: string | null;
 };
 
-function normalizePhone(phone: string) {
+type UserDoc = {
+  _id: ObjectId;
+  whatsappAlertsEnabled?: boolean | null;
+  whatsappVerifiedAt?: Date | string | null;
+  whatsappNumber?: string | null;
+};
+
+type SendSummary =
+  | { attempted: number; sent: number; skipped: number; failed: number }
+  | { attempted: number; sent: number; skipped: number; failed: number; reason: "not_enabled" };
+
+function normalizePhone(phone: string): string {
   return phone.trim().replace(/\s+/g, "");
 }
 
-function getBaseUrl() {
+function isRecord(v: unknown): v is Record<string, unknown> {
+  return typeof v === "object" && v !== null;
+}
+
+function getBaseUrl(): string {
   const base = process.env.APP_BASE_URL || process.env.NEXTAUTH_URL;
   if (base) return base.replace(/\/$/, "");
   const vercel = process.env.VERCEL_URL;
@@ -47,7 +62,7 @@ function getBaseUrl() {
   return "http://localhost:3000";
 }
 
-function fmtMoney(amount: number, currency: string) {
+function fmtMoney(amount: number, currency: string): string {
   try {
     return new Intl.NumberFormat("en-US", { style: "currency", currency, maximumFractionDigits: 2 }).format(
       Number.isFinite(amount) ? amount : 0
@@ -57,9 +72,51 @@ function fmtMoney(amount: number, currency: string) {
   }
 }
 
-function fmtPct(p: number) {
+function fmtPct(p: number): string {
   if (!Number.isFinite(p)) return "∞";
   return `${Math.round(p * 100)}%`;
+}
+
+/**
+ * Your codebase has mixed mongo typings:
+ * - some environments return ModifyResult { value }
+ * - others return the document directly
+ * This extracts the actual doc safely without using `any`.
+ */
+function extractFindOneAndUpdateDoc(
+  updated: unknown
+): WithId<NotificationEventDoc> | null {
+  if (!updated) return null;
+
+  // Case A: ModifyResult-like shape: { value: doc | null }
+  if (isRecord(updated) && "value" in updated) {
+    const v = (updated as { value?: unknown }).value;
+    return isRecord(v) ? (v as WithId<NotificationEventDoc>) : null;
+  }
+
+  // Case B: Document returned directly
+  return isRecord(updated) ? (updated as WithId<NotificationEventDoc>) : null;
+}
+
+function getErrorMessage(e: unknown): string {
+  if (e instanceof Error && typeof e.message === "string") return e.message;
+  if (isRecord(e) && typeof e.message === "string") return e.message;
+  return "WhatsApp send failed";
+}
+
+function getSendMessage(send: unknown): string {
+  if (isRecord(send) && typeof send.message === "string") return send.message;
+  return "WhatsApp send failed";
+}
+
+function toVerifiedDate(v: Date | string | null | undefined): Date | null {
+  if (!v) return null;
+  if (v instanceof Date) return Number.isFinite(v.getTime()) ? v : null;
+  if (typeof v === "string") {
+    const d = new Date(v);
+    return Number.isFinite(d.getTime()) ? d : null;
+  }
+  return null;
 }
 
 /**
@@ -71,21 +128,22 @@ export async function sendAnomalyWhatsAppAlerts(params: {
   anomalies: AnomalyLike[];
   currency?: string;
   minSeverity?: Severity; // default warning
-}) {
+}): Promise<SendSummary> {
   const db = await getDb();
   await ensureNotificationIndexes();
 
-  const users = db.collection("users");
+  const users = db.collection<UserDoc>("users");
   const events = db.collection<NotificationEventDoc>("notification_events");
 
   // User must be verified + enabled
-  const user = await users.findOne<any>({ _id: params.userId });
+  const user = await users.findOne({ _id: params.userId });
+
   const enabled = !!user?.whatsappAlertsEnabled;
-  const verifiedAt = user?.whatsappVerifiedAt ? new Date(user.whatsappVerifiedAt) : null;
+  const verifiedAt = toVerifiedDate(user?.whatsappVerifiedAt ?? null);
   const phoneRaw = typeof user?.whatsappNumber === "string" ? user.whatsappNumber : null;
 
   if (!enabled || !verifiedAt || !phoneRaw) {
-    return { attempted: 0, sent: 0, skipped: params.anomalies.length, failed: 0, reason: "not_enabled" as const };
+    return { attempted: 0, sent: 0, skipped: params.anomalies.length, failed: 0, reason: "not_enabled" };
   }
 
   const toE164 = normalizePhone(phoneRaw);
@@ -112,7 +170,7 @@ export async function sendAnomalyWhatsAppAlerts(params: {
     attempted++;
 
     try {
-      const updated: any = await events.findOneAndUpdate(
+      const updatedResult: unknown = await events.findOneAndUpdate(
         {
           userId: params.userId,
           kind: "anomaly_whatsapp",
@@ -129,11 +187,10 @@ export async function sendAnomalyWhatsAppAlerts(params: {
           $set: { to: toE164, severity: a.severity, status: "reserved", updatedAt: now },
           $setOnInsert: { createdAt: now },
         },
-        { upsert: true, returnDocument: "after" } as any
+        { upsert: true, returnDocument: "after" }
       );
 
-      const doc: NotificationEventDoc | null =
-        (updated && typeof updated === "object" && "value" in updated ? updated.value : updated) ?? null;
+      const doc = extractFindOneAndUpdateDoc(updatedResult);
 
       if (!doc) {
         skipped++;
@@ -153,12 +210,16 @@ export async function sendAnomalyWhatsAppAlerts(params: {
 
       const send = await sendWhatsAppMessage({ toE164, body: msg });
 
-      if (!(send.ok && send.status === "ok")) {
+      const isOk = isRecord(send) && (send as { ok?: unknown }).ok === true && (send as { status?: unknown }).status === "ok";
+      if (!isOk) {
+        const errMsg = getSendMessage(send);
+
         // Soft-fail: mark failed but don't crash sync
         await events.updateOne(
           { userId: params.userId, kind: "anomaly_whatsapp", channel: "whatsapp", date: a.date, service: a.service },
-          { $set: { status: "failed", updatedAt: new Date(), error: send.ok ? send.message : send.message } }
+          { $set: { status: "failed", updatedAt: new Date(), error: errMsg } }
         );
+
         failed++;
         continue;
       }
@@ -169,9 +230,9 @@ export async function sendAnomalyWhatsAppAlerts(params: {
       );
 
       sent++;
-    } catch (e: any) {
+    } catch (e: unknown) {
       failed++;
-      const err = typeof e?.message === "string" ? e.message : "WhatsApp send failed";
+      const err = getErrorMessage(e);
 
       try {
         await events.updateOne(

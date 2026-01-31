@@ -79,10 +79,20 @@ export default function AppDashboardPage() {
             Connect AWS
           </Link>
 
-          <Button type="button" variant="secondary" size="md">
-            <FileText className="h-4 w-4" />
-            Generate report
-          </Button>
+          <Link
+            href="/app/usage"
+            className="inline-flex items-center gap-2 rounded-lg border border-border/70 bg-surface/60 px-3 py-2 text-sm font-semibold text-foreground hover:bg-surface-2/70 transition"
+          >
+            <TrendingUp className="h-4 w-4" />
+            View usage
+          </Link>
+
+          <Link href="/app/reports" className="inline-flex">
+            <Button type="button" variant="secondary" size="md">
+              <FileText className="h-4 w-4" />
+              Generate report
+            </Button>
+          </Link>
 
         </div>
       </div>
@@ -168,7 +178,7 @@ export default function AppDashboardPage() {
               <CardDescription>Latest anomalies detected (mock)</CardDescription>
             </div>
             <Link
-              href="/app/reports"
+              href="/app/anomalies"
               className="text-xs font-medium text-muted-foreground hover:text-foreground transition"
             >
               View all

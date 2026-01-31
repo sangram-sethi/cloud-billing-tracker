@@ -15,6 +15,44 @@ type CronLockDoc = {
   updatedAt?: Date;
 };
 
+type AwsConnUserRow = {
+  userId?: ObjectId;
+  status?: string;
+};
+
+type WeeklySendResultLike = {
+  sent?: boolean;
+  skipped?: boolean;
+  error?: string;
+};
+
+function isRecord(v: unknown): v is Record<string, unknown> {
+  return typeof v === "object" && v !== null;
+}
+
+function pickBool(obj: Record<string, unknown>, key: string): boolean | undefined {
+  const v = obj[key];
+  return typeof v === "boolean" ? v : undefined;
+}
+
+function pickString(obj: Record<string, unknown>, key: string): string | undefined {
+  const v = obj[key];
+  return typeof v === "string" ? v : undefined;
+}
+
+function asWeeklySendResultLike(v: unknown): WeeklySendResultLike {
+  if (!isRecord(v)) return {};
+  return {
+    sent: pickBool(v, "sent"),
+    skipped: pickBool(v, "skipped"),
+    error: pickString(v, "error"),
+  };
+}
+
+function isObjectId(v: unknown): v is ObjectId {
+  return v instanceof ObjectId;
+}
+
 function getSecretFromReq(req: Request) {
   const url = new URL(req.url);
   const qs = url.searchParams.get("secret");
@@ -29,13 +67,12 @@ async function acquireLock(params: { key: string; ttlMs: number; owner: string }
   const now = new Date();
   const lockUntil = new Date(now.getTime() + params.ttlMs);
 
-  const updated: any = await locks.findOneAndUpdate(
+  const doc = await locks.findOneAndUpdate(
     { _id: params.key, $or: [{ lockUntil: { $exists: false } }, { lockUntil: { $lte: now } }] },
     { $set: { lockUntil, lockedAt: now, lockedBy: params.owner, updatedAt: now }, $setOnInsert: { createdAt: now } },
-    { upsert: true, returnDocument: "after", includeResultMetadata: true } as any
+    { upsert: true, returnDocument: "after" }
   );
 
-  const doc: CronLockDoc | null = (updated && typeof updated === "object" && "value" in updated ? updated.value : updated) ?? null;
   if (!doc) return { ok: false as const };
   return { ok: true as const, lock: doc };
 }
@@ -78,7 +115,7 @@ export async function GET(req: Request) {
   const maxUsers = Number(url.searchParams.get("maxUsers") ?? "300");
   const concurrency = Number(url.searchParams.get("concurrency") ?? "3");
 
-  // Optional override (debug/testing):
+  // Optional override:
   // weekStart=YYYY-MM-DD&endExclusive=YYYY-MM-DD (endExclusive = day after week end)
   const weekStart = url.searchParams.get("weekStart") || undefined;
   const endExclusive = url.searchParams.get("endExclusive") || undefined;
@@ -97,39 +134,43 @@ export async function GET(req: Request) {
 
   try {
     const db = await getDb();
-    const conns = db.collection("aws_connections");
+    const conns = db.collection<AwsConnUserRow>("aws_connections");
 
-    // Only send to connected AWS users (prevents emailing people who never used it)
-    const rows = await conns
-      .find({ status: "connected" }, { projection: { userId: 1 } })
-      .limit(safeMax)
-      .toArray();
+    const rows = await conns.find({ status: "connected" }, { projection: { userId: 1 } }).limit(safeMax).toArray();
 
-    const users: ObjectId[] = rows.map((r: any) => r.userId).filter((id: any) => id && typeof id === "object");
+    const users: ObjectId[] = rows.map((r) => r.userId).filter(isObjectId);
 
     const results = await runPool(users, safeConc, async (userId) => {
-      const r = await sendWeeklyFounderReportForUser({ userId, weekStart, endExclusive });
-      return { userId: String(userId), result: r };
+      const resultUnknown: unknown = await sendWeeklyFounderReportForUser({ userId, weekStart, endExclusive });
+      return { userId: userId.toHexString(), result: resultUnknown };
     });
 
-    const sent = results.filter((r) => (r.result as any).sent).length;
-    const skipped = results.filter((r) => (r.result as any).skipped).length;
-    const failed = results.filter((r) => (r.result as any).error).length;
+    const sent = results.filter((r) => asWeeklySendResultLike(r.result).sent === true).length;
+    const skipped = results.filter((r) => asWeeklySendResultLike(r.result).skipped === true).length;
+    const failed = results.filter((r) => typeof asWeeklySendResultLike(r.result).error === "string").length;
 
     return NextResponse.json({
       ok: true,
       runId,
       startedAt,
       endedAt: new Date(),
-      config: { maxUsers: safeMax, concurrency: safeConc, weekStart: weekStart ?? null, endExclusive: endExclusive ?? null },
+      config: {
+        maxUsers: safeMax,
+        concurrency: safeConc,
+        weekStart: weekStart ?? null,
+        endExclusive: endExclusive ?? null,
+      },
       processed: results.length,
       sent,
       skipped,
       failed,
       sampleErrors: results
-        .filter((r) => (r.result as any).error)
-        .slice(0, 25)
-        .map((r) => ({ userId: r.userId, error: (r.result as any).error })),
+        .map((r) => {
+          const info = asWeeklySendResultLike(r.result);
+          return info.error ? { userId: r.userId, error: info.error } : null;
+        })
+        .filter((x): x is { userId: string; error: string } => x !== null)
+        .slice(0, 25),
     });
   } finally {
     await releaseLock({ key: "weekly_founder_report", owner: runId });

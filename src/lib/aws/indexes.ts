@@ -2,7 +2,6 @@ import { getDb } from "@/lib/mongodb";
 import { COLLECTIONS } from "./types";
 
 declare global {
-  // eslint-disable-next-line no-var
   var _cbgAwsIndexesEnsured: boolean | undefined;
 }
 
@@ -11,7 +10,7 @@ declare global {
  * Safe to call multiple times; uses a global guard in a single runtime.
  */
 export async function ensureAwsIndexes() {
-  if (global._cbgAwsIndexesEnsured) return;
+  if (globalThis._cbgAwsIndexesEnsured) return;
 
   const db = await getDb();
 
@@ -31,5 +30,5 @@ export async function ensureAwsIndexes() {
   await db.collection(COLLECTIONS.anomalies).createIndex({ userId: 1, status: 1, date: -1 });
   await db.collection(COLLECTIONS.anomalies).createIndex({ userId: 1, date: -1 });
 
-  global._cbgAwsIndexesEnsured = true;
+  globalThis._cbgAwsIndexesEnsured = true;
 }

@@ -3,13 +3,13 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/cn";
-import { LayoutDashboard, Plug, FileText, Settings, LineChart, AlertTriangle } from "lucide-react";
+import { LayoutDashboard, Plug, FileText, Settings, TrendingUp, AlertTriangle } from "lucide-react";
 
 const links = [
   { href: "/app", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/app/usage", label: "Usage", icon: LineChart },
+  { href: "/app/connect-aws", label: "Connect AWS", icon: Plug },
+  { href: "/app/usage", label: "Usage", icon: TrendingUp },
   { href: "/app/anomalies", label: "Anomalies", icon: AlertTriangle },
-  { href: "/app/connect-aws", label: "Connect", icon: Plug },
   { href: "/app/reports", label: "Reports", icon: FileText },
   { href: "/app/settings", label: "Settings", icon: Settings },
 ];

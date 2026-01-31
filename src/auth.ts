@@ -60,9 +60,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
   callbacks: {
     session: ({ session, token }) => {
-      if (session.user && token.sub) {
-        // @ts-expect-error augmented in src/types/next-auth.d.ts
-        session.user.id = token.sub;
+      if (session.user && typeof token.sub === "string") {
+        // Works whether or not your next-auth types are augmented
+        (session.user as typeof session.user & { id?: string }).id = token.sub;
       }
       return session;
     },

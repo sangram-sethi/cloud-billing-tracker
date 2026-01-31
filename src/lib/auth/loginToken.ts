@@ -1,5 +1,6 @@
 import crypto from "crypto";
-import { ObjectId } from "mongodb";
+import { ObjectId, type WithId } from "mongodb";
+
 import { getDb } from "@/lib/mongodb";
 
 type LoginTokenDoc = {
@@ -10,6 +11,10 @@ type LoginTokenDoc = {
   expiresAt: Date;
   consumedAt: Date | null;
 };
+
+function isRecord(v: unknown): v is Record<string, unknown> {
+  return typeof v === "object" && v !== null;
+}
 
 function tokenSecret() {
   return process.env.AUTH_SECRET || "dev-secret";
@@ -35,6 +40,32 @@ function toObjectId(value: unknown): ObjectId | null {
   }
 
   return null;
+}
+
+function isWithIdLoginTokenDoc(v: unknown): v is WithId<LoginTokenDoc> {
+  if (!isRecord(v)) return false;
+
+  const _id = v["_id"];
+  const tokenHashVal = v["tokenHash"];
+
+  return _id instanceof ObjectId && typeof tokenHashVal === "string";
+}
+
+/**
+ * Mongo driver typings differ across versions:
+ * - some return { value: doc | null }
+ * - some return doc | null directly
+ * We normalize without using `any`.
+ */
+function extractLoginTokenDoc(result: unknown): WithId<LoginTokenDoc> | null {
+  if (!result) return null;
+
+  if (isRecord(result) && "value" in result) {
+    const value = (result as { value: unknown }).value;
+    return isWithIdLoginTokenDoc(value) ? value : null;
+  }
+
+  return isWithIdLoginTokenDoc(result) ? result : null;
 }
 
 export function generateLoginTokenRaw() {
@@ -73,20 +104,13 @@ export async function consumeLoginToken(raw: string) {
   const now = new Date();
   const tokenHash = hashToken(raw);
 
-  // Different MongoDB driver versions/type defs return either:
-  // 1) { value: doc | null } (ModifyResult)
-  // 2) doc | null directly
-  const result: any = await (tokens as any).findOneAndUpdate(
+  const result = await tokens.findOneAndUpdate(
     { tokenHash, consumedAt: null, expiresAt: { $gt: now } },
     { $set: { consumedAt: now } },
     { returnDocument: "after" }
   );
 
-  const doc: LoginTokenDoc | null =
-    result && typeof result === "object" && "value" in result
-      ? (result.value as LoginTokenDoc | null)
-      : (result as LoginTokenDoc | null);
-
+  const doc = extractLoginTokenDoc(result);
   if (!doc) return null;
 
   const userId = toObjectId(doc.userId);

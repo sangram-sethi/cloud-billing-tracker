@@ -1,12 +1,11 @@
 import { getDb } from "@/lib/mongodb";
 
 declare global {
-  // eslint-disable-next-line no-var
-  var _cbgIndexesEnsured: boolean | undefined;
+  var _cbgAuthIndexesEnsured: boolean | undefined;
 }
 
 export async function ensureAuthIndexes() {
-  if (global._cbgIndexesEnsured) return;
+  if (globalThis._cbgAuthIndexesEnsured) return;
 
   const db = await getDb();
 
@@ -24,5 +23,5 @@ export async function ensureAuthIndexes() {
   // Rate limits: TTL on resetAt (cleanup)
   await db.collection("rate_limits").createIndex({ resetAt: 1 }, { expireAfterSeconds: 0 });
 
-  global._cbgIndexesEnsured = true;
+  globalThis._cbgAuthIndexesEnsured = true;
 }

@@ -45,9 +45,22 @@ function stddev(xs: number[], mu: number) {
   return Math.sqrt(s2 / (xs.length - 1));
 }
 
-function fmtMoneyUSD(n: number) {
-  if (!Number.isFinite(n)) return "$0.00";
-  return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 2 }).format(n);
+function fmtMoney(amount: number, currency: string) {
+  const safe = Number.isFinite(amount) ? amount : 0;
+  try {
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency,
+      maximumFractionDigits: 2,
+    }).format(safe);
+  } catch {
+    // fallback if currency code is invalid
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: "USD",
+      maximumFractionDigits: 2,
+    }).format(safe);
+  }
 }
 
 function severityFor(pct: number): "info" | "warning" | "critical" | null {
@@ -99,6 +112,7 @@ function computeSeriesAnomalies(opts: {
     const pctText = Number.isFinite(pctChange) ? `${Math.round(pctChange * 100)}%` : "∞";
 
     const label = service === "__TOTAL__" ? "Total spend" : service;
+
     out.push({
       date: sorted[i].date,
       service,
@@ -107,7 +121,10 @@ function computeSeriesAnomalies(opts: {
       pctChange,
       zScore,
       severity: sev,
-      message: `${label} jumped ${pctText} vs 7-day baseline (${fmtMoneyUSD(observed)} vs ${fmtMoneyUSD(baseline)}).`,
+      message: `${label} jumped ${pctText} vs 7-day baseline (${fmtMoney(observed, currency)} vs ${fmtMoney(
+        baseline,
+        currency
+      )}).`,
     });
   }
 
